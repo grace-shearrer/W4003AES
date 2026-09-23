@@ -481,15 +481,15 @@ add_ieo_sum <- function(df, col_names, prefix) {
 
 ```{r}
 # Loop through each food variable
-for (food in food_vars) {
+for (food in allFOODS) {
   print(food)
   # Get the original column names, getting the independent eating
   original_col_names <- get(food)$ieo$qual
   print(original_col_names)
   
   # Add "_ieo_" to each column name
- # daily_col_names <- paste0(original_col_names, "_dailyFreq")
- # print(daily_col_names)
+  # daily_col_names <- paste0(original_col_names, "_dailyFreq")
+  # print(daily_col_names)
   
   # Apply the function using the modified column names
   df <- add_ieo_sum(df, original_col_names, food)
@@ -559,7 +559,7 @@ mapping <- c(
 # Initialize a vector to store skipped food items
 skipped_foods <- c()
 
-for (food in food_vars) {
+for (food in allFOODS) {
   print(food)
   # Get the column name from the food's general$qual
   col_name <- get(food)$general$qual
@@ -665,7 +665,7 @@ print(mean_differences2)
 # all food groups match
 
 ## Gen parenting
-The parent and child reponses are inverse coded
+The parent and child responses are inverse coded
 
 #### Parent
 CGPQ Coercive control -> small = low coersion 
@@ -706,14 +706,70 @@ childR<-c("Q3_3_1","Q3_3_2", "Q3_3_3")
 ```
 
 ```{r}
+dfN[childR,]
+filter(dfN, qual == 'Q3_3_1')
+dfN
+```
+
+
+#even more labels
+```{r}
+evenMoreLabels <- c(
+  CGPQ_Nurturance_Autonomy_Support_parent = "Parent CGPQ Nurturance -- Autonomy Support mean of Q5_19_11 Q5_19_12 Q5_19_13 Q5_19_14 Q5_19_15", 
+  CGPQ_Coercive_control_Authoritarian_control_parent = "Parent CGPQ Coercive control -- Authoritarian control mean of Q5_19_6 Q5_19_7 Q5_19_8 Q5_19_9 Q5_19_10",
+  CGPQ_Nurturance_Responsiveness_parent = "Parent CGPQ Nurturance -- Responsiveness mean of Q5_19_1 Q5_19_2 Q5_19_3 Q5_19_4 Q5_19_5",
+  CGPQ_Nurturance_Autonomy_Support_child = "REVERSE CODED Child CGPQ Nurturance -- Autonomy Support mean of Q3_3_4_rc Q3_3_5_rc Q3_3_6_rc Q3_3_7_rc",
+  CGPQ_Coercive_control_Authoritarian_control_child = "REVERSE CODED Child CGPQ Coercive control -- Authoritarian control mean of Q3_3_8_rc Q3_3_9_rc Q3_3_10_rc Q3_3_11_rc",
+  CGPQ_Nurturance_Responsiveness_child = "REVERSE CODED Child CGPQ Nurturance -- Responsiveness mean of Q3_3_1_rc Q3_3_2_rc Q3_3_3_rc",
+  Q3_3_1 = "My father/mother knows when things are not going very well for me",
+  Q3_3_2 = "My father/mother knows what is going on with me when I am feeling badly",
+  Q3_3_3 = "Please rate your agreement with the following statements. - My father/mother knows when I am having difficulty with something",
+  Q3_3_8 = "Please rate your agreement with the following statements. - I am not allowed to question my father’s/mother’s decisions",
+  Q3_3_9 = "Please rate your agreement with the following statements. - When my father/mother asks me to do something; he/she expects me to do it immediately without any questions",  
+  Q3_3_10 = "Please rate your agreement with the following statements. - My father/mother does not allow me to get angry with him/her",
+  Q3_3_11 = "Please rate your agreement with the following statements. - My father/mother wants me to always obey",
+  Q3_3_4 = "Please rate your agreement with the following statements. - My father/mother encourages me to be curious; to explore; and to question things",
+  Q3_3_5 = "Please rate your agreement with the following statements. - My father/mother respects my opinion and encourages me to express it",
+  Q3_3_6 = "Please rate your agreement with the following statements. - My father/mother encourages me to be true to myself",
+  Q3_3_7 = "Please rate your agreement with the following statements. - My father/mother gives me a lot of freedom to make up my own mind",
+  Q5_19_11 = "Please mark how much you agree or disagree with the following statements. - I encourage my child to be curious; to explore; and to question things.",
+  Q5_19_12 = "Please mark how much you agree or disagree with the following statements. - I trust my child.",
+  Q5_19_13 = "Please mark how much you agree or disagree with the following statements. - I respect my child's opinion and encourage him/her to express it.",
+  Q5_19_14 = "Please mark how much you agree or disagree with the following statements. - I encourage my child to be true to himself/herself.",
+  Q5_19_15 = "Please mark how much you agree or disagree with the following statements. - I encourage my child to express his/her opinions even when I do not agree with him/her.",
+  Q5_19_6 = "Please mark how much you agree or disagree with the following statements. - I teach my child to stay in control of his or her feelings at all times.",
+  Q5_19_7 = "Please mark how much you agree or disagree with the following statements. - I do not allow my child to question my decisions.",
+  Q5_19_8 = "Please mark how much you agree or disagree with the following statements. - When I ask my child to do something; I expect him/her to do it immediately without any questions.",
+  Q5_19_9 = "Please mark how much you agree or disagree with the following statements. - I let my child know that I am the boss in our house.",
+  Q5_19_10 = "Please mark how much you agree or disagree with the following statements. - I do not allow my child to get angry with me.",  
+  Q5_19_1 = "Please mark how much you agree or disagree with the following statements. - I know exactly when things are not going very well for my child.",
+  Q5_19_2 = "Please mark how much you agree or disagree with the following statements. - When my child is sad; I know what is going on with him or her.",
+  Q5_19_3 = "Please mark how much you agree or disagree with the following statements. - I feel good about the relationship I have with my child.",
+  Q5_19_4 = "Please mark how much you agree or disagree with the following statements. - My child and I have warm affectionate moments together.",
+  Q5_19_5 = "Please mark how much you agree or disagree with the following statements. - I know exactly when my child has difficulty.",
+  Q6_10 = "parent age",
+  Q6_18 = "parent ethnicity",
+  Q6_19 = "parent race",
+  Q6_2 = "child age",
+  Q6_3 = "child sex",
+  Q6_11 = "parent sex",
+  Q6_9 = "parent type",
+  Q6_6 = "child ethnicity",
+  Q6_7 = "child race"
+)
+Labels <- c(Labels, evenMoreLabels)
+```
+
+# Checking the reverse coding
+```{r}
 # Please rate your agreement with the following statements. - My father mother does not allow me to get angry with him her
 hist(df$Q3_3_10)
-hist(df$Q3_3_10_rc)
+#hist(df$Q3_3_10_rc)
 #Please mark how much you agree or disagree with the following statements. - I teach my child to stay in control of his or her feelings at all times.
 hist(df$Q5_19_6)
 ```
 
-
+# Making straight forward parent scores
 ```{r}
 df$CGPQ_Nurturance_Autonomy_Support_parent<-rowMeans(df[parentAS], na.rm = TRUE)
 df$CGPQ_Nurturance_Responsiveness_parent<-rowMeans(df[parentR], na.rm = TRUE)
@@ -723,64 +779,69 @@ df$CGPQ_Coercive_control_Authoritarian_control_parent<-rowMeans(df[parentAC], na
 
 ```{r}
 # Function to recode a column with custom values
-recode_column <- function(df, column_name) {
-  df %>%
-    mutate(
-      !!paste0(column_name, "_rc") := recode(.data[[column_name]],
-                                             `1` = 50L, 
-                                             `2` = 40L, 
-                                             `3` = 30L, 
-                                             `4` = 20L, 
-                                             `5` = 10L)
-    )
+convert_child_column <- function(df, column_name, string) {
+  mapping <- c(
+    `1` = 50L, 
+    `2` = 40L, 
+    `3` = 30L, 
+    `4` = 20L, 
+    `5` = 10L
+  )
+  new_name <- paste0(column_name, string) #take the input column name and append the string to it
+  df[[new_name]] <- mapping[as.character(df[[column_name]])] # map the new values in the mapping list to the column with the original column name call it the new column name
+  df[[new_name]]<-df[[new_name]]/10
+  return(df)
 }
 ```
 
 ## Recoded child variable on same scale as parent
 ```{r}
 for(item in childAS){
-  df<-recode_column(df, item)
+  df<-convert_child_column(df, item, "_rc")
 }
 
-
 for(item in childAC){
-  df<-recode_column(df, item)
+  df<-convert_child_column(df, item, "_rc")
 }
 
 for(item in childR){
-  df<-recode_column(df, item)
+  df<-convert_child_column(df, item, "_rc")
 }
-
+names(df)
 ```
 
 ```{r}
 childASr<-c("Q3_3_4_rc",   "Q3_3_5_rc",   "Q3_3_6_rc",   "Q3_3_7_rc" )
-childACr<-c("Q3_3_8_rc",   "Q3_3_9_rc",  "Q3_3_10_rc",  "Q3_3_11_rc" )
-childRr<-c("Q3_3_1_rc","Q3_3_2_rc", "Q3_3_3_rc")
+childACr<-c("Q3_3_8_rc",   "Q3_3_9_rc",   "Q3_3_10_rc",  "Q3_3_11_rc" )
+childRr<-c("Q3_3_1_rc",    "Q3_3_2_rc",   "Q3_3_3_rc")
 ```
 
 ```{r}
 df$CGPQ_Nurturance_Autonomy_Support_child<-rowMeans(df[childASr], na.rm = TRUE)
 df$CGPQ_Nurturance_Responsiveness_child<-rowMeans(df[childRr], na.rm = TRUE)
 df$CGPQ_Coercive_control_Authoritarian_control_child<-rowMeans(df[childACr], na.rm = TRUE)
-
-df$CGPQ_Coercive_control_Authoritarian_control_child<-df$CGPQ_Coercive_control_Authoritarian_control_child/10
-df$CGPQ_Nurturance_Responsiveness_child<-df$CGPQ_Nurturance_Responsiveness_child/10
-df$CGPQ_Nurturance_Autonomy_Support_child<-df$CGPQ_Nurturance_Autonomy_Support_child/10
 ```
 
-Q6_10 = parent age
-Q6_18 = parent ethnicity
-Q6_19 = parent race
-Q6_2 = child age
-Q6_3 = child sex
-Q6_11 = parent sex
-Q6_9 = parent type
-Q6_6 = child ethnicity
-Q6_7 = child race
+
 ```{r}
-View(df)
-write.table(df, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINALMASTER6425.csv", sep = ",", row.names = F)
+df["ageParent"]<-df$Q6_10
+df["ethnicityParent"]<-df$Q6_18
+df["raceParent"]<-df$Q6_19
+df["ageChild"]<-df$Q6_2
+df["sexChild"]<-df$Q6_3
+df["sexParent"]<-df$Q6_11
+df["typeParent"]<-df$Q6_9
+df["ethnicityChild"]<-df$Q6_6
+df["raceChild"]<-df$Q6_7
+```
+
+```{r}
+names(df)
+write.table(df, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINALMASTER92326check.csv", sep = ",", row.names = F)
+```
+
+```{r}
+save.image("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINALMASTER92326.RData")
 ```
 
 
@@ -796,9 +857,6 @@ TOTALlabels<-c(Labels, dflabels)
 TOTALlabels
 TOTALlabels.list <- as.list(TOTALlabels)
 ```
-addLabels.list<-c()
-tDD<-create_dictionary(df, id_var = c("ResponseId"), file = NULL, var_labels = dflabels.list)
-View(tDD)
 
 
 ```{r}
