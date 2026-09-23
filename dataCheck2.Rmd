@@ -577,18 +577,8 @@ for (food in food_vars) {
 # Print or inspect skipped items
 print("Skipped the following food items:")
 print(skipped_foods)
-names(df)
 ```
-#need to convert to the daily
-```{r}
-food_vars_totals<-c("friedChicken_total","processedMeat_total","burgers_total","fruitJuice_total","wholeGrainBread_total","cookedWholeGrains_total","candyChocolate_total","cookiesCakes_total","frozenDeserts_total","chips_total","sugaryCereal_total","cereal_total","soda_total","energyDrinks_total","sportDrinks_total","water_total","milk_total","fruit_total","greenSalad_total","fruitDrinks_total","fries_total","potatoes_total","veggies_total","beans_total","pizza_total","tacosBurritos_total","heatServe_total")
 
-
-# Loop through each food variable
-for (food in food_vars_totals) {
-    df<-convert_food_column(df, food, "_dailyFreq")
-}
-```
 
 
 #create groups
@@ -611,8 +601,7 @@ for (food in food_vars_totals) {
 ```{r}
 beneficialFoods<-c("fruitJuice", "water", "fruit",  "greenSalad", "veggies", "beans",  "wholeGrainBread", "cookedWholeGrains", "cereal", "potatoes")
 
-detrimentalFoods<-c("pizza","heatServe", "tacosBurritos",  "friedChicken", "burgers", "processedMeat","fries", "candyChocolate","cookiesCakes", "chips", "frozenDeserts", "sugaryCereal","fruitDrinks",
-                    "soda", "energyDrinks", "sportDrinks")
+detrimentalFoods<-c("pizza","heatServe", "tacosBurritos",  "friedChicken", "burgers", "processedMeat","fries", "candyChocolate","cookiesCakes", "chips", "frozenDeserts", "sugaryCereal","fruitDrinks", "soda", "energyDrinks", "sportDrinks")
 
 
 
@@ -631,26 +620,27 @@ groups <- list(sugarFoods = sugarFoods, FV = FV, detrimentalFoods = detrimentalF
 sum_food_list_columns <- function(df, food_list, suffix, groupname) {
   # Construct full column names
   col_names <- paste0(food_list, suffix)
-  
+  #print(col_names)
   # Create a name for the new column
   new_col_name <- paste0(groupname, suffix)
-  
-  # Add the new column with row-wise sum
-  df <- df %>%
-    rowwise() %>%
-    mutate(!!new_col_name := sum(c_across(all_of(col_names)), na.rm = TRUE)) %>%
-    ungroup()
+  #print(new_col_name)
+  #print(rowSums(df[,col_names]))
+  df[[new_col_name]] <- rowSums(df[,col_names], na.rm = TRUE)
   
   return(df)
 }
-
 ```
 
 ```{r}
 for (group_name in names(groups)) {
   df <- sum_food_list_columns(df, groups[[group_name]], "_ieo", group_name)
 }
+names(df)
 ```
+```{r}
+names(df)
+```
+
 # all food groups match
 
 
