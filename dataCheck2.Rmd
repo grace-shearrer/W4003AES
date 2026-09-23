@@ -638,11 +638,31 @@ for (group_name in names(groups)) {
 names(df)
 ```
 ```{r}
-names(df)
+#names(df)
+yichenGroups<-c("Junk.foods","SSB","Sugary.foods","Fruits.vegetables","Detrimental.foods","Benefical.foods")
+graceGroups<-c("junkFoods_ieo", "ssb_ieo", "sugarFoods_ieo", "FV_ieo", "detrimentalFoods_ieo", "beneficialFoods_ieo")
 ```
 
-# all food groups match
+```{r}
+# Initialize a named vector to store the differences
+mean_differences2 <- c()
 
+# Loop through both lists
+for (i in seq_along(yichenGroups)) {
+  yi_col <- yichenGroups[i]
+  grace_col <- graceGroups[i]
+  # Compute the difference in means
+  diff <- mean(df[[yi_col]], na.rm = TRUE) - mean(df[[grace_col]], na.rm = TRUE)
+  
+  # Store the result with a descriptive name
+  mean_differences2[paste(yi_col, "-", grace_col)] <- diff
+}
+
+# View the result
+print(mean_differences2)
+
+```
+# all food groups match
 
 ## Gen parenting
 The parent and child reponses are inverse coded
