@@ -448,16 +448,30 @@ convert_food_column <- function(df, column_name, string) {
 
 
 
-
-
 ```{r}
 #make new column for the ieo
 add_ieo_sum <- function(df, col_names, prefix) {
+  # new mapping for the food variables into daily intake value from factors
+  mapping <- c(
+    `1` = 0,
+    `2` = 0.29,
+    `3` = 0.71,
+    `4` = 1,
+    `5` = 2,
+    `6` = 3
+  )
+  new_col_names_vector<-c()
+  for (x in col_names){
+    new_name <- paste0(x, "_ieo") #take the input column name and append the string to it
+    df[[new_name]] <- mapping[as.character(df[[x]])] # map the new values in the mapping list to the column with the original column name call it the new column name
+    new_col_names_vector <- c(new_col_names_vector, new_name)
+  }
   # Create the new column name dynamically
-  new_col_name <- paste0(prefix, "_ieo")
-  
+  new_col_name <- paste0(prefix, "_ieo") ##take the input column name and append the string to it
+  print(new_col_name)
+  print(df[, new_col_names_vector])
   # Compute row sums and add to the data frame
-  df[[new_col_name]] <- rowSums(df[, col_names], na.rm = TRUE)
+  df[[new_col_name]] <- rowSums(df[, new_col_names_vector], na.rm = TRUE)
   
   return(df)
 }
@@ -468,18 +482,19 @@ add_ieo_sum <- function(df, col_names, prefix) {
 ```{r}
 # Loop through each food variable
 for (food in food_vars) {
-#  print(food)
+  print(food)
   # Get the original column names, getting the independent eating
   original_col_names <- get(food)$ieo$qual
+  print(original_col_names)
   
   # Add "_ieo_" to each column name
-  daily_col_names <- paste0(original_col_names, "_dailyFreq")
+ # daily_col_names <- paste0(original_col_names, "_dailyFreq")
  # print(daily_col_names)
   
   # Apply the function using the modified column names
-  df <- add_ieo_sum(df, daily_col_names, food)
+  df <- add_ieo_sum(df, original_col_names, food)
 }
-#names(df)
+names(df)
 ```
 
 
