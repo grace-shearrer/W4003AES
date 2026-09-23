@@ -20,14 +20,12 @@ df<-vroom("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RES
 dfN<-vroom("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/test.csv")
 ```
 
-
-
 # Format the df names so they make more sense remove extra row
 ```{r}
 dfNames <- as.data.frame(t(dfN), stringsAsFactors = FALSE)
 colnames(dfNames) <- dfNames[1, ]
 dfNames <- dfNames[-1, ]
-dfNames
+# dfNames
 ```
 # Get unique names between the dataframe and the name file
 ```{r}
@@ -42,7 +40,6 @@ descrip<-c( "...1", "autonomySupportParent", "monitoringParent", "availabilityPa
 dfNamesDescp<-as.data.frame(rbind(unique_in_x, descrip))
 names(dfNamesDescp)<-unique_in_x
 dfNamesDescp <- dfNamesDescp[-1, ]
-
 ```
 
 #Beginning making labels
@@ -63,7 +60,7 @@ Labels <- setNames(
 )
 # View result
 # print(Labels)
-View(Labels)
+#View(Labels)
 ```
 
 # Adding more descriptive labels
@@ -364,6 +361,11 @@ tacosBurritos<-filter_food_rows(dfN, "TACOS, BURRITOS, NACHOS")
 heatServe<-filter_food_rows(dfN, "HEAT AND SERVE")
 ```
 
+```{r}
+candyChocolate$ieo$qual
+```
+
+
 # all of the food groups
 ```{r}
 allFOODS <- c("friedChicken", "processedMeat", "burgers", "fruitJuice", "wholeGrainBread", "cookedWholeGrains", "candyChocolate", "cookiesCakes", "frozenDeserts", "chips", 
@@ -408,8 +410,18 @@ flatLabels <- unlist(allLabels)
 # leaving only the qual code as the name
 names(flatLabels) <- sub(".*\\.", "", names(flatLabels))
 # View the resulting named vector (currently commented out)
-View(flatLabels)
+print(flatLabels)
 ```
+check whole grain bread
+
+```{r}
+for (food in allFOODS) {
+  #print(food)
+  print(paste0(food, " is the row sum of ", get(food)$general$qual))
+}
+
+```
+
 
 ```{r}
 # Append the labels stored in flatLabels to the existing Labels vector
@@ -468,8 +480,8 @@ add_ieo_sum <- function(df, col_names, prefix) {
   }
   # Create the new column name dynamically
   new_col_name <- paste0(prefix, "_ieo") ##take the input column name and append the string to it
-  print(new_col_name)
-  print(df[, new_col_names_vector])
+  #print(new_col_name)
+  #print(df[, new_col_names_vector])
   # Compute row sums and add to the data frame
   df[[new_col_name]] <- rowSums(df[, new_col_names_vector], na.rm = TRUE)
   
@@ -482,10 +494,10 @@ add_ieo_sum <- function(df, col_names, prefix) {
 ```{r}
 # Loop through each food variable
 for (food in allFOODS) {
-  print(food)
+  #print(food)
   # Get the original column names, getting the independent eating
   original_col_names <- get(food)$ieo$qual
-  print(original_col_names)
+  #print(original_col_names)
   
   # Add "_ieo_" to each column name
   # daily_col_names <- paste0(original_col_names, "_dailyFreq")
@@ -635,7 +647,7 @@ sum_food_list_columns <- function(df, food_list, suffix, groupname) {
 for (group_name in names(groups)) {
   df <- sum_food_list_columns(df, groups[[group_name]], "_ieo", group_name)
 }
-names(df)
+#names(df)
 ```
 ```{r}
 #names(df)
@@ -836,75 +848,60 @@ df["raceChild"]<-df$Q6_7
 ```
 
 ```{r}
-names(df)
 write.table(df, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINALMASTER92326check.csv", sep = ",", row.names = F)
 ```
 
 ```{r}
-save.image("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINALMASTER92326.RData")
+save.image("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINALMASTER92326check.RData")
 ```
 
 
 # Create actual dictionary
 ```{r}
-remove_ids <- c("Progress", "Duration (in seconds)", "Finished", "ExternalReference", "DistributionChannel", "UserLanguage", "Q_BallotBoxStuffing", "Q1_4_8_TEXT", "Q4_1", "Q4_2", "Q4_3", "Q6_22", "Q7_1", "Q7_2", "Q7_3", "PID", "psid", "study", "K2", "med", "rnid", "gid", "sname", "viga", "term", "Q_RelevantIDDuplicate", "Q_RelevantIDDuplicateScore", "Q_RelevantIDFraudScore") # values to remove
+remove_ids <- c("Progress", "Duration (in seconds)", "Finished", "ExternalReference", "DistributionChannel", "UserLanguage", "Q_BallotBoxStuffing", "Q1_4_8_TEXT", "Q4_1", "Q4_2", "Q4_3", "Q6_22", "Q7_1", "Q7_2", "Q7_3", "PID", "psid", "study", "K2", "med", "rnid", "gid", "sname", "viga", "term", "Q_RelevantIDDuplicate", "Q_RelevantIDDuplicateScore", "Q_RelevantIDFraudScore","Duration..in.seconds.") # values to remove
 
 dfNn <- dfN[!dfN$qual %in% remove_ids, ]
-
+dfNn
 dflabels <- setNames(dfNn$description, dfNn$qual)
 dflabels
 TOTALlabels<-c(Labels, dflabels)
 TOTALlabels
 TOTALlabels.list <- as.list(TOTALlabels)
+TOTALlabels.list
+Labeldf <- as.data.frame(TOTALlabels.list)
+Labeldf
+write.table(Labeldf, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/ddLabels.csv", sep =",")
 ```
 
 
 ```{r}
 tDD<-create_dictionary(df, id_var = c("ResponseId"), file = NULL, var_labels = TOTALlabels.list)
-```
-
-```{r}
 View(tDD)
 ```
-
 ```{r}
-#write.table(tDD, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/testDD.csv", sep = ",")
-```
-
-
-
-
-```{r}
-load("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINAL6425.RData")
-```
-
-
-```{r}
-#save.image("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINAL6425.RData")
-```
-
-
-
-
-```{r}
-library(readxl)
-
-# read_excel reads both xls and xlsx files
-og<-read_excel("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/noHeadCopy of Qualtrics+Pilot-Actual+2020-Parent-Child+Dyad+Survey_December+21,+2021_09.21_commasub.xlsx")
+write.table(tDD, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/dd.csv", sep =",")
 ```
 
 ```{r}
-sapply(og, class)
-og[,13:406][] <- lapply(og[,13:406], factor)
+sapply(df, class)
+names(df)
+df$Age
+fctrs<-c("Sex","Race", "Education","Marital.status","Food.security","ageParent","ethnicityParent","raceParent","ageChild","sexChild", "sexParent", "typeParent", "ethnicityChild", "raceChild", "Q6_23_1","Q6_23_2","Q6_23_3","Q6_23_4", "Q1_10")                                         
+df[fctrs] <- lapply(df[fctrs], as.factor)
+```
+
+
+```{r}
+datasummary_skim(df, output = '~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/summary.docx')
 ```
 
 ```{r}
-tDD2<-create_dictionary(og, id_var = c("ResponseId"), file = NULL, var_labels = as.list(dflabels))
-write.table(tDD2, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/testDD2.csv", sep = ",")
-
+dfFactor <- df %>%  select_if(is.factor) 
+head(dfFactor)
+dfNumeric<-df %>%  select_if(is.numeric) 
+datasummary_skim(dfNumeric[,1:250],output = '~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/summaryN1.docx')
+datasummary_skim(dfNumeric[,251:500],output = '~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/summaryN2.docx')
+datasummary_skim(dfNumeric[,501:628],output = '~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/summaryN3.docx')
+names(dfNumeric)
 ```
-
-
-
-
 
