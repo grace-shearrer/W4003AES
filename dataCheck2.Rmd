@@ -364,64 +364,57 @@ tacosBurritos<-filter_food_rows(dfN, "TACOS, BURRITOS, NACHOS")
 heatServe<-filter_food_rows(dfN, "HEAT AND SERVE")
 ```
 
-
-
-
-
-
-
-
+# all of the food groups
 ```{r}
-
 allFOODS <- c("friedChicken", "processedMeat", "burgers", "fruitJuice", "wholeGrainBread", "cookedWholeGrains", "candyChocolate", "cookiesCakes", "frozenDeserts", "chips", 
 "sugaryCereal", "cereal", "soda", "energyDrinks", "sportDrinks", "water", "milk", 
 "fruit", "greenSalad", "fruitDrinks", "fries", "potatoes", "veggies", "beans", 
 "pizza", "tacosBurritos", "heatServe")
-
-# Initialize an empty list to store all labels
-allLabels <- list()
-
-# Loop through each food item
-for (food in allFOODS) {
-  if (exists(food)) {
-    food_data <- get(food)
-    
-    if (!is.null(food_data$all)) {
-      # Extract qual and description
-      quals <- food_data$all$qual
-      descs <- paste0(food_data$all$description)
-      
-      # Store with qual codes as names
-      allLabels[[food]] <- setNames(descs, quals)
-    } else {
-      warning(paste("No $all element in", food))
-    }
-  } else {
-    warning(paste("Object", food, "does not exist"))
-  }
-}
-
-
-
-flatLabels <- unlist(allLabels)
-
-# Fix the names to keep only the qual codes
-names(flatLabels) <- sub(".*\\.", "", names(flatLabels))
-
-# View result
-#print(flatLabels)
-
-
-Labels <- c(Labels,flatLabels)
 ```
-
-
 
 
 ```{r}
-food_vars<-c("friedChicken","processedMeat","burgers","fruitJuice","wholeGrainBread","cookedWholeGrains","candyChocolate","cookiesCakes","frozenDeserts","chips","sugaryCereal","cereal","soda","energyDrinks","sportDrinks","water","milk","fruit","greenSalad","fruitDrinks","fries","potatoes","veggies","beans","pizza","tacosBurritos","heatServe")
+# Initialize an empty list that will store labels for each food item
+allLabels <- list()
+
+# Loop through each food item name contained in allFOODS
+for (food in allFOODS) {
+  # Check whether an object with this food name exists in the environment
+  if (exists(food)) {
+    # Retrieve the object and store it in food_data
+    food_data <- get(food)
+    # Check that the object contains an element called $all
+    if (!is.null(food_data$all)) {
+      # Extract the qual codes from the $all element
+      quals <- food_data$all$qual
+      # Extract the descriptions and convert them to character strings
+      descs <- paste0(food_data$all$description)
+      # Create a named vector where descriptions are values
+      # and qual codes are the corresponding names
+      allLabels[[food]] <- setNames(descs, quals)
+    } else {
+      # Display a warning if the object does not contain a $all element
+      warning(paste("No $all element in", food))
+    }
+    
+  } else {
+    # Display a warning if the object does not exist
+    warning(paste("Object", food, "does not exist"))
+  }
+}
+# Collapse the list of named vectors into a single named vector
+flatLabels <- unlist(allLabels)
+# Remove any prefix before the final period in each name,
+# leaving only the qual code as the name
+names(flatLabels) <- sub(".*\\.", "", names(flatLabels))
+# View the resulting named vector (currently commented out)
+View(flatLabels)
 ```
 
+```{r}
+# Append the labels stored in flatLabels to the existing Labels vector
+Labels <- c(Labels, flatLabels)
+```
 
 
 ## Convert into daily intakes
@@ -447,30 +440,18 @@ convert_food_column <- function(df, column_name, string) {
     `5` = 2,
     `6` = 3
   )
-  new_name <- paste0(column_name, string)
- # print(column_name)
-# print(new_name)
-  df[[new_name]] <- mapping[as.character(df[[column_name]])]
-  #print(df[[new_name]])
+  new_name <- paste0(column_name, string) #take the input column name and append the string to it
+  df[[new_name]] <- mapping[as.character(df[[column_name]])] # map the new values in the mapping list to the column with the original column name call it the new column name
   df
 }
 ```
 
 
-# Converting into daily intakes for all of the variables
-```{r}
-# Loop through each food variable
-for (food in food_vars) {
-  col_names <- get(food)$all$qual
-  for (x in col_names){
-    df<-convert_food_column(df, x, "_dailyFreq")
-  } 
-}
-```
 
 
 
 ```{r}
+#make new column for the ieo
 add_ieo_sum <- function(df, col_names, prefix) {
   # Create the new column name dynamically
   new_col_name <- paste0(prefix, "_ieo")
