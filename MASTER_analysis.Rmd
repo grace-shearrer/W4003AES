@@ -16,9 +16,7 @@ library(stringr)
 library(dplyr)
 ```
 # Purpose of this notebook
-Create summary variables for the FLASHE foods and the parenting practices.
-Need to create the summary variables for the questions related to "when your main caregiver was not around"
-From Table 2. Summary of food groups, variable computation, and variable names for daily intake frequency in the FLASHE user guide
+This notebook is a log of cleaning done to the master dataset for W-4003
 
 ## Naming convention
 NAMEFOODGROUP_iEO
@@ -26,10 +24,13 @@ Example: SSB_iEO
 
 # Read in the data
 ```{r}
-df<-vroom("/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/Qualtrics+Pilot-Actual+2020-Parent-Child+Dyad+Survey_December+21,+2021_09.21.csv")
-df<-df[-c(1), ] # remove extra header row
-head(df[, c(15:203)]) # remove extra from the front of the dataset from qualtrics
+df<-vroom("/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/iEOparent_food.csv")
+head(df)
 names(df)
+df$Q6_33
+#df<-vroom("/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/Qualtrics+Pilot-Actual+2020-Parent-Child+Dyad+Survey_December+21,+2021_09.21.csv")
+#df<-df[-c(1), ] # remove extra header row
+#df[] <- lapply(df, gsub, pattern='\xd0', replacement='')
 ```
 # Read in codebook
 ```{r}
@@ -43,9 +44,7 @@ depend_vars <-code_df %>%
 
 independ_vars <-code_df %>%
   filter(str_detect(Survey_item, "not around?"))
-independ_vars
 ```
-
 # Diet data
 From table 1 FLASHE guide - Drinks into drinks per day
 From table 2
@@ -53,6 +52,8 @@ From table 2
 ## SSB
 soda + energy drinks + sweetened
 fruit drinks + sports drinks
+### From JAND paper
+SSBs included soda, energy drinks, sweetened fruit drinks and sports drinks
 ```{r}
 SSB_vars <- code_df%>%
   filter(str_detect(Survey_item, "SWEETENED FRUIT DRINKS") | str_detect(Survey_item, "SODA") | str_detect(Survey_item, "ENERGY DRINKS") | str_detect(Survey_item, "SPORTS DRINKS"))
@@ -74,23 +75,39 @@ SSB_depend_vars <-depend_vars %>%
 
 ```
 
+
+
+
+```{r}
+df[SSB_SWEET_vars$Variable_name] <- lapply(df[SSB_SWEET_vars$Variable_name] , factor)
+
+summary(df$Q2.11)
+levels(df$Q2.6)
+```
+
+
+```{r}
+df[SSB_SWEET_vars$Variable_name] <- lapply(df[SSB_SWEET_vars$Variable_name] , factor)
+df[SSB_ENERGY_vars$Variable_name] <- lapply(df[SSB_ENERGY_vars$Variable_name] , factor)
+df[SSB_SODA_vars$Variable_name] <- lapply(df[SSB_SODA_vars$Variable_name] , factor)
+df[SSB_SPORT_vars$Variable_name] <- lapply(df[SSB_SPORT_vars$Variable_name] , factor)
+SSB_SWEET_vars$Variable_name
+levels(df$Q2.10)
+```
+
 ```{r}
 df1<-df %>%
   mutate_at(c(SSB_SWEET_vars$Variable_name), funs(recode(.,
                               'I did not drink sweetened fruit drinks during the past 7 days' = 0,                
                               'I did not drink sweetened fruit drinks when my main caregiver was not around' = 0,
-                              '1 \xd0 3 times in the past 7 days' = 0.29,
-                              '4 \xd0 6 times in the past 7 days' = 0.71,
-                              '1-3 times in the past 7 days' = 0.29,
-                              '4-6 times in the past 7 days' = 0.71,
+                              '1  3 times in the past 7 days' = 0.29,
+                              '4  6 times in the past 7 days' = 0.71,
                               '1 time per day' = 1,
                               '2 times per day' = 2,
                               '3 or more times per day' = 3)))%>% 
   mutate_at(c(SSB_SODA_vars$Variable_name), funs(recode(.,
                               'I did not drink soda during the past 7 days' = 0,
                               'I did not drink soda when my main caregiver was not around' = 0,
-                              '1 \xd0 3 times in the past 7 days' = 0.29,
-                              '4 \xd0 6 times in the past 7 days' = 0.71,
                               '1-3 times in the past 7 days' = 0.29,
                               '4-6 times in the past 7 days' = 0.71,
                               '1 time per day' = 1,
@@ -99,8 +116,6 @@ df1<-df %>%
   mutate_at(c(SSB_ENERGY_vars$Variable_name), funs(recode(.,
                               'I did not drink energy drinks during the past 7 days' = 0,
                               'I did not drink energy drinks when my main caregiver was not around' = 0,
-                              '1 \xd0 3 times in the past 7 days' = 0.29,
-                              '4 \xd0 6 times in the past 7 days' = 0.71,
                               '1-3 times in the past 7 days' = 0.29,
                               '4-6 times in the past 7 days' = 0.71,
                               '1 time per day' = 1,
@@ -109,8 +124,6 @@ df1<-df %>%
   mutate_at(c(SSB_SPORT_vars$Variable_name), funs(recode(.,
                               'I did not drink sports drinks during the past 7 days' = 0,
                               'I did not drink sports drinks when my main caregiver was not around' = 0,
-                              '1 \xd0 3 times in the past 7 days' = 0.29,
-                              '4 \xd0 6 times in the past 7 days' = 0.71,
                               '1-3 times in the past 7 days' = 0.29,
                               '4-6 times in the past 7 days' = 0.71,
                               '1 time per day' = 1,
@@ -118,12 +131,29 @@ df1<-df %>%
                               '3 or more times per day' = 3)))
 
 ```
+Found error, needed to set row.names to false, index was messing up the codebook
+```{r}
+df1<-cbind(df1, no_SSB_SODA=NA,no_SSB_SWEET=NA, no_SSB_ENERGY = NA, no_SSB_SPORT = NA)
 
+test<- df1 %>% 
+  mutate_at(c(SSB_SODA_vars$Variable_name), ~ ifelse(. == 0, no_SSB_SODA == 1, no_SSB_SODA == 0 & .))
+
+
+View(test)
+test$no_SWEET
+
+df$no_SWEET[df$Q2.6 == 'I did not drink sweetened fruit drinks during the past 7 days']<-1
+df$no_SWEET[df$Q2.6 != 'I did not drink sweetened fruit drinks during the past 7 days' & df$Q2.7 == 'I did not drink sweetened fruit drinks when my main caregiver was not around']<-1
+df$no_SWEET[df$Q2.6 != 'I did not drink sweetened fruit drinks during the past 7 days' & df$Q2.7 != 'I did not drink sweetened fruit drinks when my main caregiver was not around']<-0
+
+```
 
 ## Junk Foods
 candy/chocolate + cookies/cake +
 potato chips + fried potatoes +
 frozen desserts
+### From JAND
+Junk foods included candy/chocolate, cookies/cake, potato chips, fried potatoes and frozen desserts.
 ```{r}
 JUNK_vars <- code_df %>%
   filter(str_detect(Survey_item, "CANDY OR CHOCOLATE") | str_detect(Survey_item, "COOKIES, CAKES, CUPCAKES, DOUGHNUTS, BROWNIES, POP-TARTS") | str_detect(Survey_item, "POTATO CHIPS") | str_detect(Survey_item, "FRIED POTATOES") | str_detect(Survey_item, "FROZEN DESSERTS"))
@@ -147,10 +177,18 @@ JUNK_depend_vars <-depend_vars %>%
   filter(str_detect(Survey_item, "CANDY OR CHOCOLATE") | str_detect(Survey_item, "COOKIES, CAKES, CUPCAKES, DOUGHNUTS, BROWNIES, POP-TARTS") | str_detect(Survey_item, "POTATO CHIPS") | str_detect(Survey_item, "FRIED POTATOES") | str_detect(Survey_item, "FROZEN DESSERTS"))
 ```
 
+```{r}
+df[JUNK_CANDY_vars$Variable_name] <- lapply(df[JUNK_CANDY_vars$Variable_name] , factor)
+df[JUNK_CAKE_vars$Variable_name] <- lapply(df[JUNK_CAKE_vars$Variable_name] , factor)
+df[JUNK_FROZE_vars$Variable_name] <- lapply(df[JUNK_FROZE_vars$Variable_name] , factor)
+df[JUNK_CHIPS_vars$Variable_name] <- lapply(df[JUNK_CHIPS_vars$Variable_name] , factor)
+df[JUNK_FRIES_vars$Variable_name] <- lapply(df[JUNK_FRIES_vars$Variable_name] , factor)
+```
+
 ```{r Junk food conversion}
 df2<-df1 %>%
   mutate_at(c(JUNK_CANDY_vars$Variable_name), funs(recode(.,
-                              'I did not eat candy or chocolate during the past 7 days' = 0,                                         
+                              'I did not eat candy or chocolate during the past 7 days' = 0,                                    
                               'I did not eat candy or chocolate when my main caregiver was not around' = 0,
                               '1-3 times in the past 7 days' = 0.29,
                               '4-6 times in the past 7 days' = 0.71,
@@ -182,7 +220,7 @@ df2<-df1 %>%
                               '2 times per day' = 2,
                               '3 or more times per day' = 3))) %>%
   mutate_at(c(JUNK_FRIES_vars$Variable_name), funs(recode(.,
-                              'I did not eat fried potatoes during the past 7 days' = 0,                                         
+                              'I did not eat fried potatoes during the past 7 days' = 0,                                        
                               'I did not eat fried potatoes when my main caregiver was not around' = 0,
                               '1-3 times in the past 7 days' = 0.29,
                               '4-6 times in the past 7 days' = 0.71,
@@ -195,6 +233,8 @@ df2<-df1 %>%
 ## Sugary Foods
 frozen dessert + cookies/cake +
 candy/chocolate + sugary cereal
+### From JAND
+Sugary foods included frozen desserts, cookies/cake, candy/chocolate and sugary cereal
 ```{r}
 SUGAR_vars <- code_df %>%
   filter(str_detect(Survey_item, "CANDY OR CHOCOLATE") | str_detect(Survey_item, "COOKIES, CAKES, CUPCAKES, DOUGHNUTS, BROWNIES, POP-TARTS") | str_detect(Survey_item, "SUGARY CEREALS") | str_detect(Survey_item, "FROZEN DESSERTS"))
@@ -215,18 +255,34 @@ SUGAR_independ_vars <-independ_vars %>%
 SUGAR_depend_vars <-depend_vars %>%
   filter(str_detect(Survey_item, "CANDY OR CHOCOLATE") | str_detect(Survey_item, "COOKIES, CAKES, CUPCAKES, DOUGHNUTS, BROWNIES, POP-TARTS") | str_detect(Survey_item, "SUGARY CEREALS") | str_detect(Survey_item, "FROZEN DESSERTS"))
 ```
+#### Note
+Already converted 
+candy/chocolate + cookies/cake +
+frozen desserts in see ** JUNK **
+```{r}
+df[SUGAR_CEREAL_vars$Variable_name] <- lapply(df[SUGAR_CEREAL_vars$Variable_name] , factor)
+```
+remove non-sugar cereal
+Q2.163
+Q2.164
+Q2.165
+Q2.166
+Q2.167
+Q2.168
+```{r}
+SUGAR_CEREAL_vars <- subset(SUGAR_CEREAL_vars, !(Variable_name %in% c('Q2.163','Q2.164','Q2.165','Q2.166','Q2.167','Q2.168')))
+```
 
 ```{r sugar cereal conv}
 df3<-df2 %>%
   mutate_at(c(SUGAR_CEREAL_vars$Variable_name), funs(recode(.,
-                              'I did not eat sugary cereals during the past 7 days' = 0,                                         
+                              'I did not eat sugary cereals during the past 7 days' = 0,                                        
                               'I did not eat sugary cereals when my main caregiver was not around' = 0,
                               '1-3 times in the past 7 days' = 0.29,
                               '4-6 times in the past 7 days' = 0.71,
                               '1 time per day' = 1,
                               '2 times per day' = 2,
                               '3 or more times per day' = 3))) 
-View(df3)
 ```
 
 ## Fast/Convenience Foods
@@ -329,7 +385,18 @@ FV_depend_vars <-depend_vars %>%
   filter(str_detect(Survey_item, "100% PURE FRUIT JUICE") | str_detect(Survey_item, "FRUIT like") | str_detect(Survey_item, "GREEN SALAD") | str_detect(Survey_item, "NON-FRIED VEGETABLES") | str_detect(Survey_item, "COOKED BEANS")| str_detect(Survey_item, "OTHER KIND OF POTATOES"))
 ```
 
+```{r}
+df[FV_FRUIT_vars$Variable_name] <- lapply(df[FV_FRUIT_vars$Variable_name] , factor)
+df[FV_SALAD_vars$Variable_name] <- lapply(df[FV_SALAD_vars$Variable_name] , factor)
+df[FV_POTATO_vars$Variable_name] <- lapply(df[FV_POTATO_vars$Variable_name] , factor)
+df[FV_JUICE_vars$Variable_name] <- lapply(df[FV_JUICE_vars$Variable_name] , factor)
+df[FV_BEANS_vars$Variable_name] <- lapply(df[FV_BEANS_vars$Variable_name] , factor)
+df[FV_VEGGIES_vars$Variable_name] <- lapply(df[FV_VEGGIES_vars$Variable_name] , factor)
+df[FV_JUICE_vars$Variable_name] <- lapply(df[FV_JUICE_vars$Variable_name] , factor)
+```
 
+#### Note
+one weird value at Q2.12 row 1
 ```{r fruit+veg conversion}
 df5<-df4 %>%
   mutate_at(c(FV_FRUIT_vars$Variable_name), funs(recode(.,
@@ -375,59 +442,94 @@ df5<-df4 %>%
 mutate_at(c(FV_JUICE_vars$Variable_name), funs(recode(.,
                               'I did not drink 100% pure fruit juice during the past 7 days' = 0,
                               'I did not drink 100% pure fruit juice when my main caregiver was not around' = 0,
-                              '1 \xd0 3 times in the past 7 days' = 0.29,
-                              '4 \xd0 6 times in the past 7 days' = 0.71,
+                              '1  3 times in the past 7 days' = 0.29,
+                              '4  6 times in the past 7 days' = 0.71,
                               '1-3 times in the past 7 days' = 0.29,
                               '4-6 times in the past 7 days' = 0.71,
                               '1 time per day' = 1,
                               '2 times per day' = 2,
                               '3 or more times per day' = 3)))
 ```
-# Freq total
-```{r frequencies}
-df5$SSB_iEO_freq<-rowSums(df5[SSB_independ_vars$Variable_name], na.rm = TRUE)
-df5$SUGAR_iEO_freq<-rowSums(df5[SUGAR_independ_vars$Variable_name], na.rm = TRUE)
-df5$FAST_iEO_freq<-rowSums(df5[FAST_independ_vars$Variable_name], na.rm = TRUE)
-df5$JUNK_iEO_freq<-rowSums(df5[JUNK_independ_vars$Variable_name], na.rm = TRUE)
-df5$FV_iEO_freq<-rowSums(df5[FV_independ_vars$Variable_name], na.rm = TRUE)
 
-df5$SSB_freq<-rowSums(df5[SSB_depend_vars$Variable_name], na.rm = TRUE)
-df5$SUGAR_freq<-rowSums(df5[SUGAR_depend_vars$Variable_name], na.rm = TRUE)
-df5$FAST_freq<-rowSums(df5[FAST_depend_vars$Variable_name], na.rm = TRUE)
-df5$JUNK_freq<-rowSums(df5[JUNK_depend_vars$Variable_name], na.rm = TRUE)
-df5$FV_freq<-rowSums(df5[FV_depend_vars$Variable_name], na.rm = TRUE)
-View(df5)
+```{r}
+SUGAR_CEREAL_vars <- subset(SUGAR_CEREAL_vars, !(Variable_name %in% c('Q2.163','Q2.164','Q2.165','Q2.166','Q2.167','Q2.168')))
+SUGAR_independ_vars<- subset(SUGAR_independ_vars, !(Variable_name %in% c('Q2.163','Q2.164','Q2.165','Q2.166','Q2.167','Q2.168')))
+SUGAR_depend_vars<- subset(SUGAR_depend_vars, !(Variable_name %in% c('Q2.163','Q2.164','Q2.165','Q2.166','Q2.167','Q2.168')))
+```
+
+```{r}
+which(is.na(df5$SSB_iEO_freq), arr.ind=TRUE)
+```
+
+```{r}
+SSB_independ_vars
+```
+
+```{r}
+df5[SSB_independ_vars$Variable_name]
+```
+
+
+```{r}
+names(df5[SSB_independ_vars$Variable_name])
+```
+
+
+```{r}
+SSB_independ_vars
+```
+
+
+# Freq total (means)
+```{r frequencies}
+df5$SSB_iEO_freq<-rowMeans(df5[SSB_independ_vars$Variable_name], na.rm = TRUE)
+df5$SUGAR_iEO_freq<-rowMeans(df5[SUGAR_independ_vars$Variable_name], na.rm = TRUE)
+df5$FAST_iEO_freq<-rowMeans(df5[FAST_independ_vars$Variable_name], na.rm = TRUE)
+df5$JUNK_iEO_freq<-rowMeans(df5[JUNK_independ_vars$Variable_name], na.rm = TRUE)
+df5$FV_iEO_freq<-rowMeans(df5[FV_independ_vars$Variable_name], na.rm = TRUE)
+
+df5$SSB_freq<-rowMeans(df5[SSB_depend_vars$Variable_name], na.rm = TRUE)
+df5$SUGAR_freq<-rowMeans(df5[SUGAR_depend_vars$Variable_name], na.rm = TRUE)
+df5$FAST_freq<-rowMeans(df5[FAST_depend_vars$Variable_name], na.rm = TRUE)
+df5$JUNK_freq<-rowMeans(df5[JUNK_depend_vars$Variable_name], na.rm = TRUE)
+df5$FV_freq<-rowMeans(df5[FV_depend_vars$Variable_name], na.rm = TRUE)
 ```
 
 # Parenting practice constructs
 These are based on the supplemental tables from the JAND manuscript
 https://docs.google.com/document/d/1ounsp0ThSnj7UMhk9ZRTXFpLJQA8_gnu/edit?usp=share_link&ouid=109286687682807041919&rtpof=true&sd=true
 
+# From the JAND paper
+The mean score of each parenting practice factor scale for both parent and adolescent questionnaires was calculated by first summing the scores of the items corresponding with each factor (assigning a value of 1 = never to 5 = always), and then dividing the total by the number of items in the factor.
+
+The parent model included 28 questionnaire items
+adolescent model included 26 questionnaire items
+
 ## Parent answered
 ```{r}
-Parent_vars <- code_df %>%
-  filter(str_detect(Survey_item, "I give my child ideas about how to eat healthy") | str_detect(Survey_item, "I help my child set goals to eat healthy foods") | str_detect(Survey_item, "I teach my child to read nutrition labels on foods to decide what to eat") | str_detect(Survey_item, "I ask my child to suggest how he/she can eat healthy foods") | str_detect(Survey_item, "I praise my child for eating healthy food")| str_detect(Survey_item, "I teach my child to eat and drink certain foods and drinks")| str_detect(Survey_item, "I teach my child about healthy portions to limit how much he/she eats")| str_detect(Survey_item, "I remind my child that it is important to eat healthy")| str_detect(Survey_item, "I make my child text or call me to get permission to eat certain foods") | str_detect(Survey_item, "I call or text to make sure my child does not eat unhealthy foods/drinks")| str_detect(Survey_item, "I call or text to make sure my child eats healthy foods/drinks")| str_detect(Survey_item, "I let my child know that I am keeping track of what he/she eats/drinks")| str_detect(Survey_item, "I offer rewards to get my child to eat healthy foods")| str_detect(Survey_item, "I tell my child I don't like it when he/she does not eat healthy foods")| str_detect(Survey_item, "I make sure that I have healthy foods/drinks at home for my child")| str_detect(Survey_item, "I have healthy foods at home that my child can eat or prepare for himself/herself")| str_detect(Survey_item, "buy the healthy foods and drinks that my child likes so he/she can eat/drink them")| str_detect(Survey_item, "I prepare food for my child so that he/she will eat healthy meals/snacks")| str_detect(Survey_item, "I avoid having unhealthy foods/drinks available at home for my child")| str_detect(Survey_item, "I allow my child to buy unhealthy foods to eat")| str_detect(Survey_item, "I don't mind if my child eats sweets and salty snacks")| str_detect(Survey_item, "I buy unhealthy foods for my child to eat")| str_detect(Survey_item, "I allow my child to prepare something else if he/she doesn't like what's available")| str_detect(Survey_item, "I let my child help decide what he/she eats or prepares")| str_detect(Survey_item, "I avoid TV/electronic devices (phone, iPad, etc.) during family meals so my child will do the same")| str_detect(Survey_item, "I talk to my child about not watching TV or using his/her electronic devices while eating")| str_detect(Survey_item, "I tell my child to avoid unhealthy foods/drinks")| str_detect(Survey_item, "I tell my child to eat healthy foods/drinks"))
 
-autonomy_vars<-Parent_vars %>%
-  filter(str_detect(Survey_item, "I give my child ideas about how to eat healthy") | str_detect(Survey_item, "I help my child set goals to eat healthy foods") | str_detect(Survey_item, "I teach my child to read nutrition labels on foods to decide what to eat") | str_detect(Survey_item, "I ask my child to suggest how he/she can eat healthy foods") | str_detect(Survey_item, "I praise my child for eating healthy food")| str_detect(Survey_item, "I teach my child to eat and drink certain foods and drinks")| str_detect(Survey_item, "I teach my child about healthy portions to limit how much he/she eats")| str_detect(Survey_item, "I remind my child that it is important to eat healthy"))
-
-monitoring_vars<-Parent_vars %>%
-  filter(str_detect(Survey_item, "I make my child text or call me to get permission to eat certain foods") | str_detect(Survey_item, "I call or text to make sure my child does not eat unhealthy foods/drinks")| str_detect(Survey_item, "I call or text to make sure my child eats healthy foods/drinks")| str_detect(Survey_item, "I let my child know that I am keeping track of what he/she eats/drinks")| str_detect(Survey_item, "I offer rewards to get my child to eat healthy foods")| str_detect(Survey_item, "I tell my child I don't like it when he/she does not eat healthy foods"))
-
-availability_vars<-Parent_vars %>%
-  filter(str_detect(Survey_item, "I make sure that I have healthy foods/drinks at home for my child")| str_detect(Survey_item, "I have healthy foods at home that my child can eat or prepare for himself/herself")| str_detect(Survey_item, "buy the healthy foods and drinks that my child likes so he/she can eat/drink them")| str_detect(Survey_item, "I prepare food for my child so that he/she will eat healthy meals/snacks")| str_detect(Survey_item, "I avoid having unhealthy foods/drinks available at home for my child"))
-
-indulgence_vars<-Parent_vars %>%
-  filter(str_detect(Survey_item, "I allow my child to buy unhealthy foods to eat")| str_detect(Survey_item, "I don't mind if my child eats sweets and salty snacks")| str_detect(Survey_item, "I buy unhealthy foods for my child to eat")| str_detect(Survey_item, "I allow my child to prepare something else if he/she doesn't like what's available")| str_detect(Survey_item, "I let my child help decide what he/she eats or prepares"))
-
-modeling_vars<-Parent_vars %>%
-  filter(str_detect(Survey_item, "I avoid TV/electronic devices (phone, iPad, etc.) during family meals so my child will do the same")| str_detect(Survey_item, "I talk to my child about not watching TV or using his/her electronic devices while eating"))
-
-
-expectations_vars<-Parent_vars %>%
-  filter(str_detect(Survey_item, "I tell my child to avoid unhealthy foods/drinks")| str_detect(Survey_item, "I tell my child to eat healthy foods/drinks"))
+Parent_vars <- code_df %>% filter(str_detect(Variable_name, 'Q5.5_1') |str_detect(Variable_name, 'Q5.5_2') |str_detect(Variable_name, 'Q5.5_3') |str_detect(Variable_name, 'Q5.5_4') |str_detect(Variable_name, 'Q5.6_1') |str_detect(Variable_name, 'Q5.6_2') |str_detect(Variable_name, 'Q5.6_4') |str_detect(Variable_name, 'Q5.7_3') |str_detect(Variable_name, 'Q5.7_4') |str_detect(Variable_name, 'Q5.8_1') |str_detect(Variable_name, 'Q5.8_2') |str_detect(Variable_name, 'Q5.8_3') |str_detect(Variable_name, 'Q5.8_4') |str_detect(Variable_name, 'Q5.Q5.9_1') |str_detect(Variable_name, 'Q5.9_3') |str_detect(Variable_name, 'Q5.9_4') |str_detect(Variable_name, 'Q4.10_19') |str_detect(Variable_name, 'Q3.14_3') |str_detect(Variable_name, 'Q4.10_20') |str_detect(Variable_name, 'Q4.10_21') |str_detect(Variable_name, 'Q4.10_22') |str_detect(Variable_name, 'Q2.11_18') |str_detect(Variable_name, 'Q4.11_19') |str_detect(Variable_name, 'Q4.12_22') |str_detect(Variable_name, 'Q4.12_19') |str_detect(Variable_name, 'Q4.12_20') |str_detect(Variable_name, 'Q5.13_2') |str_detect(Variable_name, 'Q5.13_3'))
 ```
 
+```{r}
+autonomy_vars<-Parent_vars %>%
+  filter(str_detect(Variable_name, 'Q5.8_1') | str_detect(Variable_name, 'Q5.8_3') |str_detect(Variable_name, 'Q3.14_3') |str_detect(Variable_name, 'Q4.10_21') |str_detect(Variable_name, 'Q2.11_18') |str_detect(Variable_name, 'Q4.11_19') |str_detect(Variable_name, 'Q5.13_3'))
+
+monitoring_vars<-Parent_vars %>%
+  filter(str_detect(Variable_name, 'Q5.7_3') |str_detect(Variable_name, 'Q5.8_4') |str_detect(Variable_name, 'Q5.9_4') |str_detect(Variable_name, 'Q4.10_19') |str_detect(Variable_name, 'Q5.13_2'))
+
+availability_vars<-Parent_vars %>%
+  filter(str_detect(Variable_name, 'Q5.5_4') |str_detect(Variable_name, 'Q5.9_1') |str_detect(Variable_name, 'Q5.9_3') |str_detect(Variable_name, 'Q4.10_22')|str_detect(Variable_name, 'Q4.12_19'))
+
+indulgence_vars<-Parent_vars %>%
+  filter(str_detect(Variable_name, 'Q5.5_1') |str_detect(Variable_name, 'Q5.6_1') |str_detect(Variable_name, 'Q5.7_4') |str_detect(Variable_name, 'Q4.12_20') )
+
+modeling_vars<-Parent_vars %>%
+  filter(str_detect(Variable_name, 'Q5.8_2') |str_detect(Variable_name, 'Q4.12_22'))
+
+expectations_vars<-Parent_vars %>%
+  filter(str_detect(Variable_name, 'Q5.5_2') | str_detect(Variable_name, 'Q4.10_20'))
+```
 
 ```{r recode parenting to numeric}
 df6<-df5 %>%
@@ -443,42 +545,61 @@ df6$AVAILABILITY<-rowMeans(df6[availability_vars$Variable_name], na.rm = TRUE)
 df6$INDULGENCE<-rowMeans(df6[indulgence_vars$Variable_name], na.rm = TRUE)
 df6$MODELING<-rowMeans(df6[modeling_vars$Variable_name], na.rm = TRUE)
 df6$EXPECTATIONS<-rowMeans(df6[expectations_vars$Variable_name], na.rm = TRUE)
-
 ```
 
 ## Child's view of parent
+Q2.173_3
+Q2.173_4
+Q2.174_1
+Q2.174_2
+Q2.174_4
+Q2.175_1
+Q2.175_2
+Q2.176_1
+Q2.176_2
+Q2.176_3
+Q2.176_4
+Q2.177_1
+Q2.177_2
+Q2.177_3
+Q2.178_1
+Q2.178_3
+Q2.178_4
+Q2.179_1
+Q2.179_2
+Q2.179_3
+Q2.180_1
+Q2.180_2
+Q2.180_3
+Q2.181_1
+Q2.181_2
+Q2.181_3
 ```{r}
 Child_vars <- code_df %>%
-  filter(
-    str_detect(Survey_item, "gives me ideas on how to eat healthy") | str_detect(Survey_item, "reminds me that it's important to eat healthy") | str_detect(Survey_item, "helps me set goals to eat healthy") | str_detect(Survey_item, "praises me for eating healthy food") | str_detect(Survey_item, "teaches me not to eat some foods and drinks") | str_detect(Survey_item, "teaches me to read nutrition labels on food to decide what to eat") | str_detect(Survey_item, "teaches me about healthy portions to limit how much I eat")| str_detect(Survey_item, "teaches me to eat some foods and drinks")| str_detect(Survey_item, "wants me to eat fruits and vegetables")| str_detect(Survey_item, "asks me to suggest how I can eat healthier")| 
-           str_detect(Survey_item, "calls or texts me to make sure I do not eat unhealthy foods/drinks") | str_detect(Survey_item, "calls or texts me to make sure I eat healthy foods/drinks") | str_detect(Survey_item, "wants me to text or call him/her to get permission to eat certain foods") | str_detect(Survey_item, "lets me know that he/she is keeping track of what I eat/drink") | 
-           str_detect(Survey_item, "buys healthy foods and drinks I like so I can eat/drink them") | str_detect(Survey_item, "makes sure there are healthy foods at home that I can eat or make for myself")| str_detect(Survey_item, "makes sure that I have healthy foods at home that I like")| 
-           str_detect(Survey_item, "allows me to buy unhealthy foods")| str_detect(Survey_item, "OK with me eating too much food")| str_detect(Survey_item, "buys unhealthy foods for me to eat")| 
-           str_detect(Survey_item, "talks to me about not watching TV/using electronic devices when I eat")| str_detect(Survey_item, "avoids TV and using a phone during meals so that I will do the same when I'm eating") | str_detect(Survey_item, "eats or drinks healthy foods/drinks in front of me so I will eat/drink healthy foods/drinks")| 
-           str_detect(Survey_item, "what I have eaten")| str_detect(Survey_item, "tells me to eat healthy foods/drinks")| str_detect(Survey_item, "tells me to avoid unhealthy foods/drinks")
-         )
-
-autonomy_child_vars<-Child_vars %>%
-  filter(str_detect(Survey_item, "gives me ideas on how to eat healthy") | str_detect(Survey_item, "reminds me that it's important to eat healthy") | str_detect(Survey_item, "helps me set goals to eat healthy") | str_detect(Survey_item, "praises me for eating healthy food") | str_detect(Survey_item, "teaches me not to eat some foods and drinks") | str_detect(Survey_item, "teaches me to read nutrition labels on food to decide what to eat") | str_detect(Survey_item, "teaches me about healthy portions to limit how much I eat")| str_detect(Survey_item, "teaches me to eat some foods and drinks")| str_detect(Survey_item, "wants me to eat fruits and vegetables")| str_detect(Survey_item, "asks me to suggest how I can eat healthier"))
-
-monitoring_child_vars<-Child_vars %>%
-  filter(str_detect(Survey_item, "calls or texts me to make sure I do not eat unhealthy foods/drinks") | str_detect(Survey_item, "calls or texts me to make sure I eat healthy foods/drinks") | str_detect(Survey_item, "wants me to text or call him/her to get permission to eat certain foods") | str_detect(Survey_item, "lets me know that he/she is keeping track of what I eat/drink"))
-
-availability_child_vars<-Child_vars %>%
-  filter(str_detect(Survey_item, "buys healthy foods and drinks I like so I can eat/drink them") | str_detect(Survey_item, "makes sure there are healthy foods at home that I can eat or make for myself")| str_detect(Survey_item, "makes sure that I have healthy foods at home that I like"))
-
-indulgence_child_vars<-Child_vars %>%
-  filter(str_detect(Survey_item, "allows me to buy unhealthy foods")| str_detect(Survey_item, "OK with me eating too much food")| str_detect(Survey_item, "buys unhealthy foods for me to eat"))
-
-modeling_child_vars<-Child_vars %>%
-  filter(str_detect(Survey_item, "talks to me about not watching TV/using electronic devices when I eat")| str_detect(Survey_item, "avoids TV and using a phone during meals so that I will do the same when I'm eating") | str_detect(Survey_item, "eats or drinks healthy foods/drinks in front of me so I will eat/drink healthy foods/drinks"))
-
-expectations_child_vars<-Child_vars %>%
-  filter(str_detect(Survey_item, "what I have eaten")| str_detect(Survey_item, "tells me to eat healthy foods/drinks")| str_detect(Survey_item, "tells me to avoid unhealthy foods/drinks"))
+  filter(str_detect(Variable_name, 'Q2.173_3') | str_detect(Variable_name, 'Q2.173_4') | str_detect(Variable_name, 'Q2.174_1') | str_detect(Variable_name, 'Q2.174_2') | str_detect(Variable_name, 'Q2.174_4') | str_detect(Variable_name, 'Q2.175_1') | str_detect(Variable_name, 'Q2.175_2') | str_detect(Variable_name, 'Q2.176_1') | str_detect(Variable_name, 'Q2.176_2') | str_detect(Variable_name, 'Q2.176_3') | str_detect(Variable_name, 'Q2.176_4') | str_detect(Variable_name, 'Q2.179_1') | str_detect(Variable_name, 'Q2.179_2') | str_detect(Variable_name, 'Q2.179_3') | str_detect(Variable_name, 'Q2.180_1') | str_detect(Variable_name, 'Q2.180_2') | str_detect(Variable_name, 'Q2.180_3') | str_detect(Variable_name, 'Q2.181_1') | str_detect(Variable_name, 'Q2.181_2') | str_detect(Variable_name, 'Q2.181_3') | str_detect(Variable_name, 'Q2.177_1') | str_detect(Variable_name, 'Q2.177_2') | str_detect(Variable_name, 'Q2.177_3') | str_detect(Variable_name, 'Q2.178_1') | str_detect(Variable_name, 'Q2.178_3') | str_detect(Variable_name, 'Q2.178_4') )
 ```
 
+```{r}
+autonomy_child_vars<-Child_vars %>%
+  filter(str_detect(Variable_name, 'Q2.174_2') | str_detect(Variable_name, 'Q2.175_2') |str_detect(Variable_name, 'Q2.176_4') |str_detect(Variable_name, 'Q2.177_1') |str_detect(Variable_name, 'Q2.179_1') |str_detect(Variable_name, 'Q2.179_3') |str_detect(Variable_name, 'Q2.180_2') |str_detect(Variable_name, 'Q2.180_3') |str_detect(Variable_name, 'Q2.181_2') |str_detect(Variable_name, 'Q2.181_3'))
 
-```{r recode parenting to numeric}
+monitoring_child_vars<-Child_vars %>%
+  filter(str_detect(Variable_name, 'Q2.173_3') |str_detect(Variable_name, 'Q2.176_2') |str_detect(Variable_name, 'Q2.177_2') | str_detect(Variable_name, 'Q2.177_3'))
+
+availability_child_vars<-Child_vars %>%
+  filter(str_detect(Variable_name, 'Q2.175_1') |str_detect(Variable_name, 'Q2.176_1') |str_detect(Variable_name, 'Q2.181_1'))
+
+indulgence_child_vars<-Child_vars %>%
+  filter(str_detect(Variable_name, 'Q2.174_1') |str_detect(Variable_name, 'Q2.178_3') |str_detect(Variable_name, 'Q2.178_4'))
+
+modeling_child_vars<-Child_vars %>%
+  filter(str_detect(Variable_name, 'Q2.173_4') |str_detect(Variable_name, 'Q2.174_4') |str_detect(Variable_name, 'Q2.179_2'))
+
+expectations_child_vars<-Child_vars %>%
+  filter(str_detect(Variable_name, 'Q2.176_3') |str_detect(Variable_name, 'Q2.178_1') |str_detect(Variable_name, 'Q2.180_1'))
+```
+
+```{r recode parenting child to numeric}
 df7<-df6 %>%
   mutate_at(c(Child_vars$Variable_name), funs(recode(.,                                                                                                                  'Never' = 1,'Rarely' = 2,'Sometimes' = 3,'Very often' = 4,'Always' = 5))) 
 ```
@@ -597,6 +718,25 @@ df10$child_SEX<-as.numeric(as.character(df10$child_SEX))
 
 ### Other covariates: marital status, food security, parent gender, parent education, parent income, iEO
 ```{r}
+summary(as.factor(df$Q6.29))
+```
+(1) Coding Responses and Assessing Households’ Food Security Status:
+Responses of “often” or “sometimes” on questions HH3 and HH4, and “yes” on AD1, AD2, and
+AD3 are coded as affirmative (yes). Responses of “almost every month” and “some months but
+not every month” on AD1a are coded as affirmative (yes). The sum of affirmative responses to
+the six questions in the module is the household’s raw score on the scale.
+Food security status is assigned as follows:
+ Raw score 0-1—High or marginal food security (raw score 1 may be considered marginal
+food security, but a large proportion of households that would be measured as having
+marginal food security using the household or adult scale will have raw score zero on the
+six-item scale)
+ Raw score 2-4—Low food security
+ Raw score 5-6—Very low food security
+For some reporting purposes, the food security status of households with raw score 0-1 is
+described as food secure and the two categories “low food security” and “very low food
+security” in combination are referred to as food insecure.
+
+```{r}
 #Q6.20 marital status
 # Food security 
 #Q6.24<-Often true (1) Sometimes true (2) Never true (3) Don't know or prefer not to answer (4)
@@ -618,8 +758,9 @@ df11<-df10 %>%
 
 df11<-df11 %>%
   mutate(FOOD_SEC = rowSums(select(.,'Q6.24','Q6.25','Q6.26','Q6.27','Q6.28','Q6.29'), na.rm=TRUE))
+
 df11$FOOD_SEC_CAT <- cut(df11$FOOD_SEC,
-              breaks=c(0, 1, 4, 7),
+              breaks=c(0, 2, 5, 7),
               labels = c(1, 2, 3), right=FALSE)
 df11$FOOD_SEC_CAT<-as.numeric(as.character(df11$FOOD_SEC_CAT))
 summary(as.factor(df11$FOOD_SEC_CAT))
@@ -671,30 +812,86 @@ df15<-df15%>%
                               '$85,000 or more'=4)))
 
 ```
-
+Fixed food security 
 ```{r}
-#write.table(df15, "/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/master_df.csv", row.names = F, sep = ",")
-```
-
-```{r}
-#load(file = "/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/master_3723.RData")
+cbind(df15$FOOD_SEC, df15$FOOD_SEC_CAT)
+summary(as.factor(df15$FOOD_SEC_CAT))
 ```
 
 
 ```{r}
-#save.image(file = "/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/master_3723.RData")
+write.table(df15, "/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/master_df.csv", row.names = F, sep = ",")
+```
+
+```{r}
+load(file = "/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/OLD/inprocess.RData")
 ```
 
 
-"SSB_iEO_freq"                 
-[409] "SUGAR_iEO_freq"                "FAST_iEO_freq"                 "JUNK_iEO_freq"                 "FV_iEO_freq"                  
-[413] "SSB_freq"                      "SUGAR_freq"                    "FAST_freq"                     "JUNK_freq"                    
-[417] "FV_freq"                       "AUTONOMY"                      "MONITORING"                    "AVAILABILITY"                 
-[421] "INDULGENCE"                    "MODELING"                      "EXPECTATIONS"                  "AUTONOMY_child"               
-[425] "MONITORING_child"              "AVAILABILITY_child"            "INDULGENCE_child"              "MODELING_child"               
-[429] "EXPECATIONS_child"             "parent_gender"                 "parent_ED"                     "INCOME"                       
-[433] "selfreport_race"               "selfreport_ethnicity"          "parentreport_race_child"       "parentreport_ethnicitiy_child"
-[437] "child_AGE"                     "child_SEX"                     "FOOD_SEC"                      "FOOD_SEC_CAT" 
+```{r}
+save.image(file = "/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/master_5423.RData")
+```
+
+
+# Checking against JAND paper
+```{r}
+df<-vroom("/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/master_df.csv")
+```
+
+Child age OK
+Child sex OK
+Child ethnicitiy OK
+Child race Asian and multiracial slightly different
+Parent gender OK
+Parent ED OK
+Parent race OK
+Parent ethncitiy OK
+Marital status OK
+Income OK
+Food security OK
+```{r}
+summary(as.factor(df$FOOD_SEC_CAT))
+```
+# Model check from JAND
+Associations between adolescent- and parent-reported parenting practice factors and adolescent daily independent eating
+occasion intake frequency of junk foods, sugar-sweetened beverages, sugary foods and fruits and vegetables
+
+All models were adjusted for: 
+* parent-reported adolescent’s age
+* sex
+* race and ethnicity
+* iEO frequency
+* parent’s education
+* marital status
+* household food security 
+```{r}
+names(df)
+```
+
+
+```{r}
+SSB_IND_p <-'SSB_iEO_freq ~ INDULGENCE +  RACE_ETH + child_SEX +  parentreport_race_child + parent_ED + FOOD_SEC_CAT + iEO + MARITAL'
+```
+
+
+## Summary of SSB CFA
+```{r}
+df15$SSB_iEO_freq
+SSB_p <- lm(SSB_IND_p, data = df15)
+summary(SSB_p)
+lm.beta(SSB_p)
+```
+
+
+
+
+
+
+
+
+
+
+
 # Getting variables for the gender analysis
 ```{r}
 #df15<-vroom("/Users/gracer/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/master_df.csv")

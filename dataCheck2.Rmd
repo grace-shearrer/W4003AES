@@ -1,0 +1,835 @@
+---
+title: "Data check"
+output: html_notebook
+---
+Parent/caregivereadolescent dyads completed an online (Qualtrics, LCC, Provo, UT) cross-sectional questionnaire from November to December 2021 (92% of adults identified as a parent; hereafter, parents or caregivers will be referred to as parents). Researchers paid Qualtrics to recruit participants to complete questionnaires from a proprietary panelist database15 using nonprobabilistic sampling16 to include households with adolescents (11e14 years) and to enforce quota constraints regarding race and ethnicity to ensure a diverse sample (African American or Black, Asian, Hispanic or Latino, White or Caucasian, each at 24% of the sample, and Hawaiian or Pacific Islander and Native American at 2% each). Qualtrics panelists are recruited through diverse channels such as marketing through airline lists, social media platforms, and online shopping centers. To reach parentechild dyads, Qualtrics advertised recruitment materials, which included a link to an online screening questionnaire, to panelists who were parents. Screening questions at the beginning of the online questionnaire were used to determine whether respondents met inclusion criteria, including being comfortable reading English (parent and adolescent), eating meals or snacks at least once in a typical week when a main caregiver or other caregivers (defined as other parents or adult family members, but not teachers or school staff) were not around (adolescent), being the primary person responsible for providing food (parent), living with the adolescent 3 or more days per week (parent), and reporting household income as 185% of federal poverty income guidelines or lower (parent).17 Financial eligibility for the Special Supplemental Nutrition Program for Women, Infants, and Children is determined by having an annual household income 185% or less of the federal poverty income guidelines.18 Qualtrics collected data until 622 responses were classified as “good completes,” meaning respondents completed the entire survey. Qualtrics then provided researchers with a Microsoft Excel file containing these data. Researchers also had access to all survey responses, including those who ended the survey early.
+
+```{r}
+library(vroom)
+library(psych)
+library(datadictionary)
+library(dplyr)
+```
+
+```{r}
+df<-vroom("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/iEOparent_food_fromYichen.csv")
+dfN<-vroom("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/test.csv")
+```
+
+
+
+
+```{r}
+dfNames <- as.data.frame(t(dfN), stringsAsFactors = FALSE)
+colnames(dfNames) <- dfNames[1, ]
+dfNames <- dfNames[-1, ]
+dfNames
+```
+
+```{r}
+x<-names(df)
+y<-names(dfNames)
+unique_in_x <- setdiff(x, y)
+unique_in_x
+
+descrip<-c( "...1", "autonomySupportParent", "monitoringParent", "availabilityParent", "indulgenceParent", "modelingParent", "expectationsParent", "durationInSeconds", "Q6_33GESDK", "ieoSweetFruitDrinkTeas", "ieo100Juice", "ieoSoda", "ieoEnergyDrink", "ieoSportDrink", "ieoWater", "ieoMilk", "ieoFruit", "ieoSalad", "ieoFries", "ieoPotato", "ieoVeggies", "ieoBeans", "ieoPizza", "ieoTacos", "ieoHeatServe", "ieoProcessedMeats", "ieoBurger", "ieoFriedChix", "ieoWholeGrainBread", "ieoWholeGrains", "ieoCandy", "ieoBakedSweets", "ieoFrozenDessets", "ieoChips", "ieoSugarCereal", "ieoCereal", "junkFoods", "SSB", "sugaryFoods", "fruitsVegetables", "detrimentalFoods", "beneficalFoods", "Age", "Sex", "Race", "iEO", "Education", "maritalStatus", "Q6_24_scoreFI", "Q6_25_scoreFI", "Q6_26_scoreFI", "Q6_27_scoreFI", "Q6_28_scoreFI", "Q6_29_scoreFI", "foodsecurityScore", "food.Security")
+dfNamesDescp<-as.data.frame(rbind(unique_in_x, descrip))
+names(dfNamesDescp)<-unique_in_x
+dfNamesDescp <- dfNamesDescp[-1, ]
+```
+#Beginning making labels
+```{r}
+yiList <- c("Q2_24ieo", "Q2_30ieo", "Q2_36ieo", "Q2_42ieo", "Q2_49ieo",             
+"Q2_55ieo", "Q2_61ieo", "Q2_67ieo", "Q2_73ieo", "Q2_79ieo",             
+"Q2_85ieo", "Q2_91ieo", "Q2_97ieo", "Q2_103ieo","Q2_109ieo",            
+"Q2_115ieo","Q2_121ieo", "Q2_127ieo", "Q2_133ieo", "Q2_139ieo",            
+"Q2_145ieo","Q2_151ieo","Q2_157ieo", "Q2_163ieo")
+
+# Remove "ieo" to get the qual codes
+quals <- gsub("ieo$", "", yiList)
+
+# Create named vector with full names and prefixed descriptions
+Labels <- setNames(
+  paste0("from Yichen ", dfN$description[match(quals, dfN$qual)]),
+  yiList
+)
+# View result
+# print(Labels)
+```
+
+
+```{r}
+moreLabels <- c(
+  Junk.foods = "from Yichen not sure where this is from",
+  SSB = "from Yichen not sure where this is from",
+  Sugary.foods = "from Yichen not sure where this is from",
+  Fruits.vegetables = "from Yichen not sure where this is from",
+  Detrimental.foods = "from Yichen not sure where this is from",
+  Benefical.foods = "from Yichen not sure where this is from",
+  iEO = "independent eating from Yichen not sure where this is from",
+  Age = "from Yichen age of child in years corresponds to Q6_2", 
+  Sex = "from Yichen parent reported child gender corresponds to Q6_3", 
+  Race= "from Yichen not sure where this is from",
+  Education= "from Yichen parent education corresponds to Q6_14", 
+  Marital.status= "from Yichen corresponds to Q6_20", 
+  Q6_24_score= "from Yichen How_often_was_the_following_statement_true_for_your_household_in_the_last_12_months__The_food_that_we_bought_just_didn't_last_and_we_didn't_have_money_to_get_more__", 
+  Q6_25_score= "from Yichen How_often_was_the_following_statement_true_for_your_household_in_the_last_12_months__We_couldn't_afford_to_eat_balanced_meals__", 
+  Q6_26_score= "from Yichen In_the_last_12_months__did_you_or_other_adults_in_your_household_ever_cut_the_size_of_your_meals_or_skip_meals_because_there_wasn't_enough_money_for_food_",
+  Q6_27_score= "from Yichen How_often_did_this_happen_",
+  Q6_28_score= "from Yichen In_the_last_12_months__did_you_ever_eat_less_than_you_felt_you_should_because_there_wasn't_enough_money_for_food_", 
+  Q6_29_score= "from Yichen In_the_last_12_months__were_you_ever_hungry_but_didn't_eat_because_there_wasn't_enough_money_for_food_",
+  foodsecurity_score= "from Yichen food security score", 
+  Food.security= "from Yichen food security level",
+  autonomyParent =  "average of Q5_6_4 Q5_8_1 Q4_10_21 Q4_11_19 Q3_14_3 Q5_8_3 Q5_6_2 Q5_13_3",
+  monitoringParent = "average of Q5_5_4 Q5_9_1 Q4_10_22 Q5_9_3 Q4_12_19",
+  availabilityParent = "avergage of Q5_5_4 Q5_9_1 Q4_10_22 Q5_9_3 Q4_12_19",
+  modelingParent = "average of Q5_8_2 Q4_12_22",
+  expectationsParent = "average of Q4_10_20 Q5_5_2",
+  indulgenceParent = "average of Q4_12_20 Q5_14_4 Q5_7_4 Q5_5_1 Q5_6_1",
+  autonomyChild = "average of Q2_174_2 Q2_175_2 Q2_176_4 Q2_177_1 Q2_179_1 Q2_179_3 Q2_180_2 Q2_180_3 Q2_181_2 Q2_181_3",
+  monitoringChild = "average of Q2_173_3 Q2_176_2 Q2_177_2 Q2_177_3",
+  availabilityChild = "average of Q2_175_1 Q2_176_1 Q2_181_1",
+  modelingChild = "average of Q2_173_4 Q2_174_4 Q2_179_2",
+  expectationsChild = "average of Q2_176_3 Q2_178_1 Q2_180_1",
+  indulgenceChild = "average of Q2_174_1 Q2_178_3 Q2_178_4")
+
+
+Labels <- c(Labels, moreLabels)
+```
+
+
+#Checking the parenting
+The parent model included 28 questionnaire items (Supplemental Table 1), and the adolescent model included 26 questionnaire items (Supplemental Table 2).
+## Parent
+28 questionnaire items (Supplemental Table 1)
+### Autonomy
+Q5_6_4 I give my child ideas about how to eat healthy 0.79 (0.02)
+Q5_8_1 I help my child set goals to eat healthy foods 0.79 (0.02)
+Q4_10_21 I teach my child to read nutrition labels on foods to decide what to eat. 0.74 (0.02
+Q4_11_19 I ask my child to suggest how he/she can eat healthy foods 0.76 (0.02)
+Q3_14_3 I praise my child for eating healthy food 0.76 (0.02)
+Q5_8_3 I teach my child to eat and drink certain foods and drinks by . explaining why they are healthy 0.80 (0.02)
+Q5_6_2 I teach my child about healthy portions to limit how much he/ she eats. 0.76 (0.02)
+Q5_13_3 I remind my child that it is important to eat healthy 0.75 (0.02)
+### Monitoring
+Q5_9_4 I make my child text or call me to get permission to eat certain foods. 0.76 (0.02
+Q5_13_2 I call or text to make sure my child does not eat unhealthy foods/drinks. 0.75 (0.02)
+Q5_5_3 I call or text to make sure my child eats healthy foods/drinks 0.74 (0.02)
+Q5_8_4 I let my child know that I am keeping track of what he/she eats/ drinks. 0.82 (0.02)
+Q4_10_19 I offer rewards to get my child to eat healthy foods 0.73 (0.02)
+Q5_7_3 I tell my child I don t like it when he/she does not eat healthy ’ foods. 0.72 (0.02)
+### Availability
+Q5_5_4 I make sure that I have healthy foods/drinks at home for my child. 0.74 (0.02)
+Q5_9_1 I have healthy foods at home that my child can eat or prepare for himself/herself. 0.77 (0.02) 
+Q4_10_22 I buy the healthy foods and drinks that my child likes so he/she can eat/drink them. 0.76 (0.02) 
+Q5_9_3 I prepare food for my child so that he/she will eat healthy meals/snacks. 0.82 (0.02)
+Q4_12_19 I avoid having unhealthy foods/drinks available at home for my child. 0.64 (0.03)
+### Indulgence
+Q4_12_20 I allow my child to buy unhealthy foods to eat 0.75 (0.02) . 
+Q5_14_4 I don't mind if my child eats sweets and salty snacks 0.52 (0.03) ’. 
+Q5_7_4 I buy unhealthy foods for my child to eat 0.75 (0.02) . 
+Q5_5_1 I allow my child to prepare something else if he/she doesn't like ’ what s available ’. 0.61 (0.03) 
+Q5_6_1 I let my child help decide what he/she eats or prepares 0.57 (0.03) .
+### Modeling
+Q5_8_2 I avoid TV/electronic devices (phone, iPad, etc.) during family meals so my child will do the same. 0.78 (0.02) 
+Q4_12_22 I talk to my child about not watching TV or using his/her electronic devices while eating. 0.81 (0.02)
+### Expectations
+Q4_10_20 I tell my child to avoid unhealthy foods/drinks 0.75 (0.02) . 
+Q5_5_2 I tell my child to eat healthy foods/drinks 0.71 (0.02)
+# Double checking with Rickelle's syntax
+SPSS Syntax
+5.20.2025
+## Parent
+**Creating Parenting Practices Mean Scores
+### Indulgence
+DATASET ACTIVATE DataSet1.
+COMPUTE PIndulgence=MEAN(Q5_5_1,Q5_6_1,Q5_7_4,Q4_12_20,Q5_14_4).
+EXECUTE.
+### Expectations
+DATASET ACTIVATE DataSet1.
+COMPUTE PExpectations=MEAN(Q5_5_2,Q4_10_20).
+EXECUTE.
+### Monitoring
+DATASET ACTIVATE DataSet1.
+COMPUTE PMonitoring=MEAN(Q5_5_3,Q5_7_3,Q5_8_4,Q5_9_4,Q4_10_19,Q5_13_2).
+EXECUTE.
+### Availability
+DATASET ACTIVATE DataSet1.
+COMPUTE PAvailability=MEAN(Q5_5_4,Q5_9_1,Q5_9_3,Q4_10_22,Q4_12_19).
+EXECUTE.
+### Autonomy
+DATASET ACTIVATE DataSet1.
+COMPUTE PAutonomy=MEAN(Q5_6_2,Q5_6_4,Q5_8_1,Q5_8_3,Q3_14_3,Q4_10_21,Q5_13_3,Q4_11_19).
+EXECUTE.
+### Modeling
+DATASET ACTIVATE DataSet1.
+COMPUTE PModeling=MEAN(Q5_8_2,Q4_12_22).
+EXECUTE.
+```{r}
+autonomyParent<-c("Q5_6_4", "Q5_8_1", "Q4_10_21", "Q4_11_19", "Q3_14_3", "Q5_8_3", "Q5_6_2", "Q5_13_3" ) #checked good
+monitoringParent<-c("Q5_9_4", "Q5_13_2", "Q5_5_3", "Q5_8_4", "Q4_10_19", "Q5_7_3")
+availabilityParent<-c("Q5_5_4", "Q5_9_1", "Q4_10_22", "Q5_9_3", "Q4_12_19")
+modelingParent<-c("Q5_8_2", "Q4_12_22")
+expectationsParent<-c("Q4_10_20", "Q5_5_2")
+indulgenceParent<-c("Q4_12_20","Q5_14_4","Q5_7_4","Q5_5_1","Q5_6_1")
+```
+
+```{r}
+df$autonomyParent<-rowMeans(df[,autonomyParent])
+df$monitoringParent<-rowMeans(df[,monitoringParent])
+df$availabilityParent<-rowMeans(df[,availabilityParent])
+df$modelingParent<-rowMeans(df[,modelingParent])
+df$expectationsParent<-rowMeans(df[,expectationsParent])
+df$indulgenceParent<-rowMeans(df[,indulgenceParent])
+
+parentFood<-c("autonomy", "monitoring","availability","indulgence","modeling","expectations")
+rickelleMeans<-c(3.5016,3.1219, 3.6569, 3.0717, 3.4799, 3.5603)
+graceMeans<-c(mean(df$autonomyParent), mean(df$monitoringParent), mean(df$availabilityParent),mean(df$indulgenceParent), mean(df$modelingParent), mean(df$expectationsParent))
+
+rbind(parentFood, rickelleMeans, graceMeans)
+```
+
+## From Rickelle Descriptive Statistics
+| Variable             | N   | Minimum | Maximum | Mean   | Std. Deviation |
+|----------------------|-----|---------|---------|--------|----------------|
+| PAutonomy.Support    | 622 | 1.00    | 5.00    | 3.5016 | 0.99455        |
+| PMonitoring          | 622 | 1.00    | 5.00    | 3.1219 | 1.07731        |
+| PAvailability        | 622 | 1.00    | 5.00    | 3.6569 | 0.92441        |
+| PIndulgence          | 622 | 1.00    | 5.00    | 3.0717 | 0.91250        |
+| PModeling            | 622 | 1.00    | 5.00    | 3.4799 | 1.15296        |
+| PExpectations        | 622 | 1.00    | 5.00    | 3.5603 | 1.06774        |
+| CAutonomy.Support    | 622 | 1.00    | 5.00    | 3.6137 | 0.77899        |
+| CMonitoring          | 622 | 1.00    | 5.00    | 3.2600 | 0.95858        |
+| CAvailability        | 622 | 1.00    | 5.00    | 3.8189 | 0.88771        |
+| CIndulgence          | 622 | 1.00    | 5.00    | 2.9025 | 0.99153        |
+| CModeling            | 622 | 1.00    | 5.00    | 3.5450 | 0.84388        |
+| CExpectations        | 622 | 1.00    | 5.00    | 3.5981 | 0.84235        |
+
+## Child
+### Autonomy 
+Q2_174_2	My  helps me set  goals to eat healthy  when
+Q2_175_2	My  praises me for eating healthy food  when
+Q2_176_4 My  gives me ideas on how to eat healthy when
+Q2_177_1	My  teaches me about healthy portions to limit how much I eat  when
+Q2_179_1	My  asks me to suggest how I can eat healthier when
+Q2_179_3	My  teaches me to eat some foods and drinks when  by explaining why these foods are healthy
+Q2_180_2	My  teaches me to read nutrition labels on food to decide what to eat when
+Q2_180_3	My  wants me to eat fruits and vegetables  when
+Q2_181_2 My  reminds me that it's important to eat healthy  when
+Q2_181_3	My  teaches me not to eat some foods and drinks when  by explaining why these foods are not healthy
+### Montioring 
+Q2_173_3	 My   calls or texts me to make sure I eat healthy foods/drinks when
+Q2_176_2	My   calls or texts me to make sure I do not eat unhealthy foods/drinks when
+Q2_177_2	My   lets me know that he/she is keeping track of what I eat/drink  when
+Q2_177_3	My   wants me to text or call him/her to get permission to eat certain foods  when
+### Availability
+Q2_175_1	My   buys healthy foods and drinks I like so I can eat/drink them when
+Q2_176_1	My   makes sure that I have healthy foods at home that I like when
+Q2_181_1	My   makes sure there are healthy foods at home that I can eat or make for myself when
+### Indulgence
+Q2_174_1	 My   allows me to buy unhealthy foods when
+Q2_178_3	My   buys unhealthy foods for me to eat when\
+Q2_178_4	My  is OK with me eating too much  food when
+### Modeling
+Q2_173_4	 My   eats or drinks healthy foods/drinks in front of me so I will eat/drink healthy foods/drinks when
+Q2_174_4	 My   avoids TV and using a phone during meals so that I will do the same when I'm eating when
+Q2_179_2	My  talks to me about not watching TV/using electronic devices when I eat when
+### Expectations
+Q2_176_3	My   tells me to avoid unhealthy foods/drinks when
+Q2_178_1	My   tells me to eat healthy foods/drinks when
+Q2_180_1	I tell my   what I have eaten  when
+
+**Creating Child Perspectives of Parenting Practices Mean Scores
+### Montioring 
+DATASET ACTIVATE DataSet1.
+COMPUTE CMonitoring=MEAN(Q2_173_3,Q2_176_2,Q2_177_2,Q2_177_3).
+EXECUTE.
+### Modeling
+DATASET ACTIVATE DataSet1.
+COMPUTE CModeling=MEAN(Q2_173_4,Q2_174_4,Q2_179_2).
+EXECUTE.
+### Indulgence
+DATASET ACTIVATE DataSet1.
+COMPUTE CIndulgence=MEAN(Q2_174_1,Q2_178_3,Q2_178_4).
+EXECUTE.
+### Autonomy 
+DATASET ACTIVATE DataSet1.
+COMPUTE CAutonomy.Support=MEAN(Q2_174_2,Q2_175_2,Q2_176_4,Q2_177_1,Q2_179_1,Q2_179_3,Q2_180_2,Q2_180_3,Q2_181_2,Q2_181_3).
+EXECUTE.
+### Availability
+DATASET ACTIVATE DataSet1.
+COMPUTE CAvailability=MEAN(Q2_175_1,Q2_176_1,Q2_181_1).
+EXECUTE.
+### Expectations
+DATASET ACTIVATE DataSet1.
+COMPUTE CExpectations=MEAN(Q2_176_3,Q2_178_1,Q2_180_1).
+EXECUTE.
+
+```{r}
+autonomyChild<-c("Q2_174_2","Q2_175_2","Q2_176_4","Q2_177_1","Q2_179_1","Q2_179_3","Q2_180_2","Q2_180_3","Q2_181_2","Q2_181_3")
+monitoringChild<-c("Q2_173_3","Q2_176_2","Q2_177_2","Q2_177_3")
+availabilityChild<-c("Q2_175_1","Q2_176_1","Q2_181_1")
+indulgenceChild<-c("Q2_174_1","Q2_178_3","Q2_178_4")
+modelingChild<-c("Q2_173_4","Q2_174_4","Q2_179_2")
+expectationsChild<-c("Q2_176_3","Q2_178_1","Q2_180_1")
+```
+
+```{r}
+df$autonomyChild<-rowMeans(df[,autonomyChild])
+df$monitoringChild<-rowMeans(df[,monitoringChild])
+df$availabilityChild<-rowMeans(df[,availabilityChild])
+df$modelingChild<-rowMeans(df[,modelingChild])
+df$expectationsChild<-rowMeans(df[,expectationsChild])
+df$indulgenceChild<-rowMeans(df[,indulgenceChild])
+```
+
+## From Rickelle Descriptive Statistics
+
+| Variable             | N   | Minimum | Maximum | Mean   | Std. Deviation |
+|----------------------|-----|---------|---------|--------|----------------|
+| CAutonomy.Support    | 622 | 1.00    | 5.00    | 3.6137 | 0.77899        |
+| CMonitoring          | 622 | 1.00    | 5.00    | 3.2600 | 0.95858        |
+| CAvailability        | 622 | 1.00    | 5.00    | 3.8189 | 0.88771        |
+| CIndulgence          | 622 | 1.00    | 5.00    | 2.9025 | 0.99153        |
+| CModeling            | 622 | 1.00    | 5.00    | 3.5450 | 0.84388        |
+| CExpectations        | 622 | 1.00    | 5.00    | 3.5981 | 0.84235        |
+
+```{r}
+childFood<-c("autonomy", "monitoring","availability","indulgence","modeling","expectations")
+rickelleMeansChild<-c(3.6137, 3.2600, 3.8189,2.9025, 3.5450, 3.5981)
+graceMeansChild<-c(mean(df$autonomyChild), mean(df$monitoringChild), mean(df$availabilityChild), mean(df$indulgenceChild), mean(df$modelingChild), mean(df$expectationsChild))
+rbind(childFood, rickelleMeansChild, graceMeansChild)
+```
+# Summary
+All of these line up with Rickelle's summaries. 
+
+# Food related variables
+```{r}
+library(dplyr)
+
+filter_food_rows <- function(df, food_name) {
+  food_rows <- df %>% filter(grepl(food_name, description, ignore.case = FALSE))
+  
+  food_rows_ieo <- food_rows %>%
+    filter(grepl("when your main caregiver was not around\\?", description, ignore.case = FALSE))
+  
+  food_rows_gen <- food_rows %>%
+    filter(!grepl("when your main caregiver was not around\\?", description, ignore.case = FALSE))
+  
+  return(list(
+    all = food_rows,
+    ieo = food_rows_ieo,
+    general = food_rows_gen
+  ))
+}
+
+```
+
+```{r}
+friedChicken<-filter_food_rows(dfN, "FRIED CHICKEN")
+processedMeat<-filter_food_rows(dfN, "PROCESSED MEAT")
+burgers<-filter_food_rows(dfN, "HAMBURGERS OR CHEESEBURGERS")
+fruitJuice<-filter_food_rows(dfN, "100% PURE FRUIT JUICE")
+wholeGrainBread<-filter_food_rows(dfN, "WHOLE GRAIN BREAD")
+cookedWholeGrains<-filter_food_rows(dfN, "COOKED WHOLE GRAINS")
+candyChocolate<-filter_food_rows(dfN,"CANDY OR CHOCOLATE")
+cookiesCakes<-filter_food_rows(dfN, "COOKIES, CAKES, CUPCAKES, DOUGHNUTS, BROWNIES, POP-TARTS")
+frozenDeserts<-filter_food_rows(dfN, "FROZEN DESSERTS")
+chips<-filter_food_rows(dfN, "POTATO CHIPS")
+sugaryCereal<-filter_food_rows(dfN, "you eat SUGARY CEREALS")
+cereal<-filter_food_rows(dfN, "NON-SUGARY CEREALS")
+soda<-filter_food_rows(dfN, "SODA")
+energyDrinks<-filter_food_rows(dfN, "ENERGY DRINKS")
+sportDrinks<-filter_food_rows(dfN, "SPORTS DRINKS")
+water<-filter_food_rows(dfN, "WATER")
+milk<-filter_food_rows(dfN, "MILK")
+fruit<-filter_food_rows(dfN, " how many times did you eat FRUIT ")
+greenSalad<-filter_food_rows(dfN, "GREEN SALAD")
+fruitDrinks<-filter_food_rows(dfN, "SWEETENED FRUIT DRINKS")
+fries<-filter_food_rows(dfN, "FRIED POTATOES")
+potatoes<-filter_food_rows(dfN, "OTHER KIND OF POTATOES")
+veggies<-filter_food_rows(dfN, "NON-FRIED VEGETABLES")
+beans<-filter_food_rows(dfN, "COOKED BEANS")
+pizza<-filter_food_rows(dfN, "PIZZA")
+tacosBurritos<-filter_food_rows(dfN, "TACOS, BURRITOS, NACHOS")
+heatServe<-filter_food_rows(dfN, "HEAT AND SERVE")
+```
+
+
+
+
+
+```{r}
+allFOODS2<-c(friedChicken, processedMeat, burgers, fruitJuice, wholeGrainBread, cookedWholeGrains, candyChocolate, cookiesCakes, frozenDeserts, chips, sugaryCereal, cereal, soda, energyDrinks, sportDrinks, water, milk, fruit, greenSalad, fruitDrinks, fries, potatoes, veggies, beans, pizza, tacosBurritos, heatServe)
+```
+
+
+```{r}
+
+allFOODS <- c("friedChicken", "processedMeat", "burgers", "fruitJuice", "wholeGrainBread", "cookedWholeGrains", "candyChocolate", "cookiesCakes", "frozenDeserts", "chips", 
+"sugaryCereal", "cereal", "soda", "energyDrinks", "sportDrinks", "water", "milk", 
+"fruit", "greenSalad", "fruitDrinks", "fries", "potatoes", "veggies", "beans", 
+"pizza", "tacosBurritos", "heatServe")
+
+# Initialize an empty list to store all labels
+allLabels <- list()
+
+# Loop through each food item
+for (food in allFOODS) {
+  if (exists(food)) {
+    food_data <- get(food)
+    
+    if (!is.null(food_data$all)) {
+      # Extract qual and description
+      quals <- food_data$all$qual
+      descs <- paste0(food_data$all$description)
+      
+      # Store with qual codes as names
+      allLabels[[food]] <- setNames(descs, quals)
+    } else {
+      warning(paste("No $all element in", food))
+    }
+  } else {
+    warning(paste("Object", food, "does not exist"))
+  }
+}
+
+
+
+flatLabels <- unlist(allLabels)
+
+# Fix the names to keep only the qual codes
+names(flatLabels) <- sub(".*\\.", "", names(flatLabels))
+
+# View result
+#print(flatLabels)
+
+
+Labels <- c(Labels,flatLabels)
+```
+
+
+
+
+```{r}
+food_vars<-c("friedChicken","processedMeat","burgers","fruitJuice","wholeGrainBread","cookedWholeGrains","candyChocolate","cookiesCakes","frozenDeserts","chips","sugaryCereal","cereal","soda","energyDrinks","sportDrinks","water","milk","fruit","greenSalad","fruitDrinks","fries","potatoes","veggies","beans","pizza","tacosBurritos","heatServe")
+```
+
+
+
+## Convert into daily intakes
+https://cancercontrol.cancer.gov/sites/default/files/2020-06/flashe-data-users-guide.pdf
+
+Table 1. FLASHE original responses and converted daily frequency values.
+| Original Response                         | Converted Daily Frequency | Qualtrics                 |
+|-------------------------------------------|---------------------------|---------------------------|
+| Never,  | 0                         | 1                         |
+| 1 to 3 times during the past 7 days       | 0.29                      | 2                         |
+| 4 to 6 times during the past 7 days       | 0.71                      | 3                         |
+| 1 time per day, | 1                         | 4                         |
+| 2 times per day, | 2                         | 5                         |
+| 3 or more times per day                   | 3                         | 6                         |
+
+```{r}
+convert_food_column <- function(df, column_name, string) {
+  mapping <- c(
+    `1` = 0,
+    `2` = 0.29,
+    `3` = 0.71,
+    `4` = 1,
+    `5` = 2,
+    `6` = 3
+  )
+  new_name <- paste0(column_name, string)
+ # print(column_name)
+# print(new_name)
+  df[[new_name]] <- mapping[as.character(df[[column_name]])]
+  #print(df[[new_name]])
+  df
+}
+```
+
+
+# Converting into daily intakes for all of the variables
+```{r}
+# Loop through each food variable
+for (food in food_vars) {
+  col_names <- get(food)$all$qual
+  for (x in col_names){
+    df<-convert_food_column(df, x, "_dailyFreq")
+  } 
+}
+```
+
+
+
+```{r}
+add_ieo_sum <- function(df, col_names, prefix) {
+  # Create the new column name dynamically
+  new_col_name <- paste0(prefix, "_ieo")
+  
+  # Compute row sums and add to the data frame
+  df[[new_col_name]] <- rowSums(df[, col_names], na.rm = TRUE)
+  
+  return(df)
+}
+```
+
+
+
+```{r}
+# Loop through each food variable
+for (food in food_vars) {
+#  print(food)
+  # Get the original column names, getting the independent eating
+  original_col_names <- get(food)$ieo$qual
+  
+  # Add "_ieo_" to each column name
+  daily_col_names <- paste0(original_col_names, "_dailyFreq")
+ # print(daily_col_names)
+  
+  # Apply the function using the modified column names
+  df <- add_ieo_sum(df, daily_col_names, food)
+}
+#names(df)
+```
+
+
+```{r}
+yiChen<-c(
+  "Q2_24ieo", "Q2_30ieo", "Q2_36ieo", #1
+  "Q2_42ieo", "Q2_49ieo",  "Q2_55ieo", #2
+  "Q2_61ieo","Q2_67ieo","Q2_73ieo", #3
+  "Q2_79ieo","Q2_85ieo","Q2_91ieo", #4
+  "Q2_97ieo","Q2_103ieo","Q2_109ieo", #5
+  "Q2_115ieo", "Q2_121ieo", "Q2_127ieo", #6
+  "Q2_133ieo","Q2_139ieo", "Q2_145ieo", #7
+  "Q2_151ieo", "Q2_157ieo", "Q2_163ieo" #8
+  )
+grace<-c("energyDrinks_ieo", "sportDrinks_ieo", "water_ieo", #1 
+  "milk_ieo", "fruit_ieo", "greenSalad_ieo",#2
+  "fries_ieo","potatoes_ieo","veggies_ieo", #3
+  "beans_ieo", "pizza_ieo", "tacosBurritos_ieo", #4
+  "heatServe_ieo", "processedMeat_ieo", "burgers_ieo", #5
+  "friedChicken_ieo", "wholeGrainBread_ieo", "cookedWholeGrains_ieo", #6
+  "candyChocolate_ieo", "cookiesCakes_ieo", "frozenDeserts_ieo", #7
+  "chips_ieo", "sugaryCereal_ieo", "cereal_ieo"#8
+  )
+
+```
+
+
+
+
+
+```{r}
+# Initialize a named vector to store the differences
+mean_differences <- c()
+
+# Loop through both lists
+for (i in seq_along(yiChen)) {
+  yi_col <- yiChen[i]
+  grace_col <- grace[i]
+  
+  # Compute the difference in means
+  diff <- mean(df[[yi_col]], na.rm = TRUE) - mean(df[[grace_col]], na.rm = TRUE)
+  
+  # Store the result with a descriptive name
+  mean_differences[paste(yi_col, "-", grace_col)] <- diff
+}
+
+# View the result
+print(mean_differences)
+
+```
+All match
+# rename the generals
+```{r}
+food_vars<-c("friedChicken","processedMeat","burgers","fruitJuice","wholeGrainBread","cookedWholeGrains","candyChocolate","cookiesCakes","frozenDeserts","chips","sugaryCereal","cereal","soda","energyDrinks","sportDrinks","water","milk","fruit","greenSalad","fruitDrinks","fries","potatoes","veggies","beans","pizza","tacosBurritos","heatServe")
+
+
+# Initialize a vector to store skipped food items
+skipped_foods <- c()
+
+for (food in food_vars) {
+  print(food)
+  # Get the column name from the food's general$qual
+  col_name <- get(food)$general$qual
+  print(col_name)
+  
+  # Proceed only if col_name exists and is length 1
+  if (length(col_name) == 1 && col_name %in% names(df)) {
+    new_col_name <- paste0(food, "_total")
+    df[[new_col_name]] <- df[[col_name]]
+  } else {
+    skipped_foods <- c(skipped_foods, food)
+  }
+}
+
+# Print or inspect skipped items
+print("Skipped the following food items:")
+print(skipped_foods)
+df$processedMeat_total
+df$processedMeat_ieo
+```
+#need to convert to the daily
+```{r}
+food_vars_totals<-c("friedChicken_total","processedMeat_total","burgers_total","fruitJuice_total","wholeGrainBread_total","cookedWholeGrains_total","candyChocolate_total","cookiesCakes_total","frozenDeserts_total","chips_total","sugaryCereal_total","cereal_total","soda_total","energyDrinks_total","sportDrinks_total","water_total","milk_total","fruit_total","greenSalad_total","fruitDrinks_total","fries_total","potatoes_total","veggies_total","beans_total","pizza_total","tacosBurritos_total","heatServe_total")
+
+
+# Loop through each food variable
+for (food in food_vars_totals) {
+    df<-convert_food_column(df, food, "_dailyFreq")
+}
+```
+
+
+#create groups
+
+| Food Group | Items |
+| --- | --- | --- |
+| Junk Foods | candy/chocolate + cookies/cake + potato chips + fried potatoes + frozen desserts |
+| Junk Foods (without frozen desserts) | candy/chocolate + cookies/cake + potato chips + fried potatoes | 
+| SSB | soda + energy drinks + sweetened fruit drinks + sports drinks | 
+| SSB (without energy drinks) | soda + sweetened fruit drinks + sports drinks | 
+| Junk Foods + SSB | soda + energy drinks + sweetened fruit drinks + sports drinks + candy/chocolate + cookies/cake + potato chips + fried potatoes + frozen desserts | 
+| Junk Foods + SSB (without frozen desserts or energy drinks) | soda + sweetened fruit drinks + sports drinks + candy/chocolate + cookies/cake + potato chips + fried potatoes | 
+| Sugary Foods | frozen dessert + cookies/cake + candy/chocolate + sugary cereal | 
+| Fast/Convenience Foods | fried potatoes + fried chicken + pizza + tacos + burgers + heat and serve | 
+| Fatty meat | fried chicken + burgers + processed meat | 
+| Fruits and vegetables | 100% fruit juice + fruit + green salad + other non-fried vegetables + cooked beans + other potatoes | 
+| All detrimental foods | pizza + heat and serve + tacos + fried chicken + burgers + processedmeat + fried potatoes + candy/chocolate + cookies/cake + potatochips + frozen desserts + sugary cereals + sweetened fruit drinks + soda + energy drinks + sports drinks |
+| All beneficial foods | 100% fruit juice + water + fruit + green salad + other non-fried vegetables + cooked beans + whole grain bread + cooked whole grains + non-sugary cereal + other potatoes |
+
+```{r}
+beneficialFoods<-c("fruitJuice", "water", "fruit",  "greenSalad", "veggies", "beans",  "wholeGrainBread", "cookedWholeGrains", "cereal", "potatoes")
+
+detrimentalFoods<-c("pizza","heatServe", "tacosBurritos",  "friedChicken", "burgers", "processedMeat","fries", "candyChocolate","cookiesCakes", "chips", "frozenDeserts", "sugaryCereal","fruitDrinks",
+                    "soda", "energyDrinks", "sportDrinks")
+
+
+
+sugarFoods<-c("sugaryCereal", "candyChocolate", "cookiesCakes", "frozenDeserts")
+FV<-c("fruit", "fruitJuice", "veggies", "greenSalad", 'potatoes', "beans")
+ssb<-c("soda", "energyDrinks", "fruitDrinks", "sportDrinks")
+junkFoods<-c("fries", "candyChocolate", "cookiesCakes", "frozenDeserts", "chips")
+```
+
+```{r}
+groups <- list(sugarFoods = sugarFoods, FV = FV, detrimentalFoods = detrimentalFoods, beneficialFoods = beneficialFoods, ssb = ssb, junkFoods = junkFoods)
+```
+
+
+```{r}
+sum_food_list_columns <- function(df, food_list, suffix, groupname) {
+  # Construct full column names
+  col_names <- paste0(food_list, suffix)
+  
+  # Create a name for the new column
+  new_col_name <- paste0(groupname, suffix)
+  
+  # Add the new column with row-wise sum
+  df <- df %>%
+    rowwise() %>%
+    mutate(!!new_col_name := sum(c_across(all_of(col_names)), na.rm = TRUE)) %>%
+    ungroup()
+  
+  return(df)
+}
+
+```
+
+```{r}
+for (group_name in names(groups)) {
+  df <- sum_food_list_columns(df, groups[[group_name]], "_ieo", group_name)
+}
+```
+# all food groups match
+
+
+## Gen parenting
+The parent and child reponses are inverse coded
+
+#### Parent
+CGPQ Coercive control -> small = low coersion 
+Autonomy support -> small = low support
+Responsiveness -> small = low responsivity 
+## Gen parenting
+#### Child
+CGPQ Nurturance -- Responsiveness -> small = high nurturance
+CGPQ Coercive control -> small = high coercion 
+Autonomy support -> small = high support
+
+# recode child values 
+## CGPQ Nurturance -- Responsiveness
+### child
+Q3_3_1  Q3_3_2 Q3_3_3
+### parent
+Q5_19_1 Q5_19_2 Q5_19_3 Q5_19_4 Q5_19_5 
+
+## CGPQ Coercive control -- Authoritarian control
+### child
+Q3_3_8   Q3_3_9  Q3_3_10  Q3_3_11   
+### parent
+Q5_19_6  Q5_19_7  Q5_19_8  Q5_19_9 Q5_19_10  
+
+## CGPQ Nurturance -- Autonomy Support
+### child
+Q3_3_4   Q3_3_5   Q3_3_6   Q3_3_7 
+### parent
+Q5_19_11 Q5_19_12 Q5_19_13 Q5_19_14 Q5_19_15 
+```{r}
+parentAS<-c("Q5_19_11", "Q5_19_12", "Q5_19_13", "Q5_19_14", "Q5_19_15" )
+parentAC<-c("Q5_19_6",  "Q5_19_7",  "Q5_19_8",  "Q5_19_9", "Q5_19_10"  )
+parentR<-c("Q5_19_1", "Q5_19_2", "Q5_19_3", "Q5_19_4", "Q5_19_5" )
+
+childAS<-c("Q3_3_4",   "Q3_3_5",   "Q3_3_6",   "Q3_3_7" )
+childAC<-c("Q3_3_8",   "Q3_3_9",  "Q3_3_10",  "Q3_3_11" )
+childR<-c("Q3_3_1","Q3_3_2", "Q3_3_3")
+```
+
+```{r}
+# Please rate your agreement with the following statements. - My father mother does not allow me to get angry with him her
+hist(df$Q3_3_10)
+hist(df$Q3_3_10_rc)
+#Please mark how much you agree or disagree with the following statements. - I teach my child to stay in control of his or her feelings at all times.
+hist(df$Q5_19_6)
+```
+
+
+```{r}
+df$CGPQ_Nurturance_Autonomy_Support_parent<-rowMeans(df[parentAS], na.rm = TRUE)
+df$CGPQ_Nurturance_Responsiveness_parent<-rowMeans(df[parentR], na.rm = TRUE)
+df$CGPQ_Coercive_control_Authoritarian_control_parent<-rowMeans(df[parentAC], na.rm = TRUE)
+```
+
+
+```{r}
+# Function to recode a column with custom values
+recode_column <- function(df, column_name) {
+  df %>%
+    mutate(
+      !!paste0(column_name, "_rc") := recode(.data[[column_name]],
+                                             `1` = 50L, 
+                                             `2` = 40L, 
+                                             `3` = 30L, 
+                                             `4` = 20L, 
+                                             `5` = 10L)
+    )
+}
+```
+
+## Recoded child variable on same scale as parent
+```{r}
+for(item in childAS){
+  df<-recode_column(df, item)
+}
+
+
+for(item in childAC){
+  df<-recode_column(df, item)
+}
+
+for(item in childR){
+  df<-recode_column(df, item)
+}
+
+```
+
+```{r}
+childASr<-c("Q3_3_4_rc",   "Q3_3_5_rc",   "Q3_3_6_rc",   "Q3_3_7_rc" )
+childACr<-c("Q3_3_8_rc",   "Q3_3_9_rc",  "Q3_3_10_rc",  "Q3_3_11_rc" )
+childRr<-c("Q3_3_1_rc","Q3_3_2_rc", "Q3_3_3_rc")
+```
+
+```{r}
+df$CGPQ_Nurturance_Autonomy_Support_child<-rowMeans(df[childASr], na.rm = TRUE)
+df$CGPQ_Nurturance_Responsiveness_child<-rowMeans(df[childRr], na.rm = TRUE)
+df$CGPQ_Coercive_control_Authoritarian_control_child<-rowMeans(df[childACr], na.rm = TRUE)
+
+df$CGPQ_Coercive_control_Authoritarian_control_child<-df$CGPQ_Coercive_control_Authoritarian_control_child/10
+df$CGPQ_Nurturance_Responsiveness_child<-df$CGPQ_Nurturance_Responsiveness_child/10
+df$CGPQ_Nurturance_Autonomy_Support_child<-df$CGPQ_Nurturance_Autonomy_Support_child/10
+```
+
+Q6_10 = parent age
+Q6_18 = parent ethnicity
+Q6_19 = parent race
+Q6_2 = child age
+Q6_3 = child sex
+Q6_11 = parent sex
+Q6_9 = parent type
+Q6_6 = child ethnicity
+Q6_7 = child race
+```{r}
+View(df)
+write.table(df, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINALMASTER6425.csv", sep = ",", row.names = F)
+```
+
+
+# Create actual dictionary
+```{r}
+remove_ids <- c("Progress", "Duration (in seconds)", "Finished", "ExternalReference", "DistributionChannel", "UserLanguage", "Q_BallotBoxStuffing", "Q1_4_8_TEXT", "Q4_1", "Q4_2", "Q4_3", "Q6_22", "Q7_1", "Q7_2", "Q7_3", "PID", "psid", "study", "K2", "med", "rnid", "gid", "sname", "viga", "term", "Q_RelevantIDDuplicate", "Q_RelevantIDDuplicateScore", "Q_RelevantIDFraudScore") # values to remove
+
+dfNn <- dfN[!dfN$qual %in% remove_ids, ]
+
+dflabels <- setNames(dfNn$description, dfNn$qual)
+dflabels
+TOTALlabels<-c(Labels, dflabels)
+TOTALlabels
+TOTALlabels.list <- as.list(TOTALlabels)
+```
+addLabels.list<-c()
+tDD<-create_dictionary(df, id_var = c("ResponseId"), file = NULL, var_labels = dflabels.list)
+View(tDD)
+
+
+```{r}
+tDD<-create_dictionary(df, id_var = c("ResponseId"), file = NULL, var_labels = TOTALlabels.list)
+```
+
+```{r}
+View(tDD)
+```
+
+```{r}
+#write.table(tDD, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/testDD.csv", sep = ",")
+```
+
+
+
+
+```{r}
+load("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINAL6425.RData")
+```
+
+
+```{r}
+#save.image("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/FINAL6425.RData")
+```
+
+
+
+
+```{r}
+library(readxl)
+
+# read_excel reads both xls and xlsx files
+og<-read_excel("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/noHeadCopy of Qualtrics+Pilot-Actual+2020-Parent-Child+Dyad+Survey_December+21,+2021_09.21_commasub.xlsx")
+```
+
+```{r}
+sapply(og, class)
+og[,13:406][] <- lapply(og[,13:406], factor)
+```
+
+```{r}
+tDD2<-create_dictionary(og, id_var = c("ResponseId"), file = NULL, var_labels = as.list(dflabels))
+write.table(tDD2, "~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/testDD2.csv", sep = ",")
+
+```
+
+
+
+
+
