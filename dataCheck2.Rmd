@@ -2,6 +2,9 @@
 title: "Data check"
 output: html_notebook
 ---
+# updating 9/23/26
+
+# From the inital paper methods
 Parent/caregivereadolescent dyads completed an online (Qualtrics, LCC, Provo, UT) cross-sectional questionnaire from November to December 2021 (92% of adults identified as a parent; hereafter, parents or caregivers will be referred to as parents). Researchers paid Qualtrics to recruit participants to complete questionnaires from a proprietary panelist database15 using nonprobabilistic sampling16 to include households with adolescents (11e14 years) and to enforce quota constraints regarding race and ethnicity to ensure a diverse sample (African American or Black, Asian, Hispanic or Latino, White or Caucasian, each at 24% of the sample, and Hawaiian or Pacific Islander and Native American at 2% each). Qualtrics panelists are recruited through diverse channels such as marketing through airline lists, social media platforms, and online shopping centers. To reach parentechild dyads, Qualtrics advertised recruitment materials, which included a link to an online screening questionnaire, to panelists who were parents. Screening questions at the beginning of the online questionnaire were used to determine whether respondents met inclusion criteria, including being comfortable reading English (parent and adolescent), eating meals or snacks at least once in a typical week when a main caregiver or other caregivers (defined as other parents or adult family members, but not teachers or school staff) were not around (adolescent), being the primary person responsible for providing food (parent), living with the adolescent 3 or more days per week (parent), and reporting household income as 185% of federal poverty income guidelines or lower (parent).17 Financial eligibility for the Special Supplemental Nutrition Program for Women, Infants, and Children is determined by having an annual household income 185% or less of the federal poverty income guidelines.18 Qualtrics collected data until 622 responses were classified as “good completes,” meaning respondents completed the entire survey. Qualtrics then provided researchers with a Microsoft Excel file containing these data. Researchers also had access to all survey responses, including those who ended the survey early.
 
 ```{r}
@@ -9,8 +12,9 @@ library(vroom)
 library(psych)
 library(datadictionary)
 library(dplyr)
+library(modelsummary)
 ```
-
+# Load data
 ```{r}
 df<-vroom("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/iEOparent_food_fromYichen.csv")
 dfN<-vroom("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RESEARCH/multi-state/master_data/2. data/test.csv")
@@ -18,25 +22,29 @@ dfN<-vroom("~/OneDrive - University of Wyoming/0. Lab/M2AENAD Lab - Documents/RE
 
 
 
-
+# Format the df names so they make more sense remove extra row
 ```{r}
 dfNames <- as.data.frame(t(dfN), stringsAsFactors = FALSE)
 colnames(dfNames) <- dfNames[1, ]
 dfNames <- dfNames[-1, ]
 dfNames
 ```
-
+# Get unique names between the dataframe and the name file
 ```{r}
 x<-names(df)
 y<-names(dfNames)
 unique_in_x <- setdiff(x, y)
 unique_in_x
-
+```
+# New descriptive names 
+```{r}
 descrip<-c( "...1", "autonomySupportParent", "monitoringParent", "availabilityParent", "indulgenceParent", "modelingParent", "expectationsParent", "durationInSeconds", "Q6_33GESDK", "ieoSweetFruitDrinkTeas", "ieo100Juice", "ieoSoda", "ieoEnergyDrink", "ieoSportDrink", "ieoWater", "ieoMilk", "ieoFruit", "ieoSalad", "ieoFries", "ieoPotato", "ieoVeggies", "ieoBeans", "ieoPizza", "ieoTacos", "ieoHeatServe", "ieoProcessedMeats", "ieoBurger", "ieoFriedChix", "ieoWholeGrainBread", "ieoWholeGrains", "ieoCandy", "ieoBakedSweets", "ieoFrozenDessets", "ieoChips", "ieoSugarCereal", "ieoCereal", "junkFoods", "SSB", "sugaryFoods", "fruitsVegetables", "detrimentalFoods", "beneficalFoods", "Age", "Sex", "Race", "iEO", "Education", "maritalStatus", "Q6_24_scoreFI", "Q6_25_scoreFI", "Q6_26_scoreFI", "Q6_27_scoreFI", "Q6_28_scoreFI", "Q6_29_scoreFI", "foodsecurityScore", "food.Security")
 dfNamesDescp<-as.data.frame(rbind(unique_in_x, descrip))
 names(dfNamesDescp)<-unique_in_x
 dfNamesDescp <- dfNamesDescp[-1, ]
+
 ```
+
 #Beginning making labels
 ```{r}
 yiList <- c("Q2_24ieo", "Q2_30ieo", "Q2_36ieo", "Q2_42ieo", "Q2_49ieo",             
@@ -55,9 +63,10 @@ Labels <- setNames(
 )
 # View result
 # print(Labels)
+View(Labels)
 ```
 
-
+# Adding more descriptive labels
 ```{r}
 moreLabels <- c(
   Junk.foods = "from Yichen not sure where this is from",
@@ -305,7 +314,7 @@ All of these line up with Rickelle's summaries.
 
 # Food related variables
 ```{r}
-library(dplyr)
+# this function will filter the dataframe based on the food name and create a list with 3 datasets. The first are all columns that include the name, the second is the ieo, and the third is general intake of the food
 
 filter_food_rows <- function(df, food_name) {
   food_rows <- df %>% filter(grepl(food_name, description, ignore.case = FALSE))
@@ -359,9 +368,7 @@ heatServe<-filter_food_rows(dfN, "HEAT AND SERVE")
 
 
 
-```{r}
-allFOODS2<-c(friedChicken, processedMeat, burgers, fruitJuice, wholeGrainBread, cookedWholeGrains, candyChocolate, cookiesCakes, frozenDeserts, chips, sugaryCereal, cereal, soda, energyDrinks, sportDrinks, water, milk, fruit, greenSalad, fruitDrinks, fries, potatoes, veggies, beans, pizza, tacosBurritos, heatServe)
-```
+
 
 
 ```{r}
